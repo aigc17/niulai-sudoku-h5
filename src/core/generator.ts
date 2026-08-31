@@ -22,11 +22,24 @@ export class LevelGenerator {
    */
   public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts?: number): LevelData {
     const maxAtt = maxAttempts ?? (size >= 8 ? 3500 : 1500);
-    // 难度梯度体系：
+    // 难度梯度与单格随机穿插体系：
     // 1~3 关：新手教学，100% 具备 1 个单格引导破局
-    // 4~15 关：初阶进阶，单格与 0 单格穿插
-    // 16+ 关：高难度硬核，优先保证 0 单格（完全考验色块多边形与行列对角线多维推导，无任何白送单格！）
-    const wantsZeroAnchor = levelId > 15 || (levelId > 3 && levelId % 2 === 0);
+    // 4~9 关：初阶探索，50% 概率随机出现 1 个单格
+    // 10~30 关：中阶进阶，35%~40% 关卡随机穿插 1 个单格，其余为 0 单格（体验多变节奏）
+    // 31+ 关：高难大师，100% 优先保证 0 单格（完全无白送单格，纯靠多格多边形深度推导）
+    const idHash = (levelId * 2654435761) >>> 0;
+    const idRng = ((idHash ^ (idHash >>> 15)) >>> 0) / 4294967296;
+
+    let wantsAnchor = false;
+    if (levelId <= 3) {
+      wantsAnchor = true;
+    } else if (levelId <= 9) {
+      wantsAnchor = idRng > 0.5;
+    } else if (levelId <= 30) {
+      wantsAnchor = idRng > 0.62; // 10~30 关随机穿插给单色单格
+    } else {
+      wantsAnchor = false; // 31 关之后纯 0 单格
+    }
 
     for (let attempt = 0; attempt < maxAtt; attempt++) {
       const seed = (levelId * 10007 + attempt * 269) >>> 0;
@@ -37,10 +50,10 @@ export class LevelGenerator {
       if (!targetQueens) continue;
 
       // 2. 以牛头为种子进行多源平衡洪泛划分连通区域
-      const allowAnchor = wantsZeroAnchor ? (attempt > maxAtt * 0.6) : (attempt < maxAtt * 0.6);
+      const allowAnchor = wantsAnchor ? (attempt < maxAtt * 0.7) : (attempt > maxAtt * 0.7);
       const regions = this.partitionBoard(size, targetQueens, rng, allowAnchor);
 
-      // 3. 严格校验：单格颜色区域有且至多 1 个（singles <= 1）；高难度关卡前期强制 0 单格！
+      // 3. 严格校验：单格颜色区域有且至多 1 个（singles <= 1）；0 单格关卡严格保证 0 单格！
       const counts = new Array<number>(size).fill(0);
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
@@ -49,7 +62,7 @@ export class LevelGenerator {
       }
       const singleCellCount = counts.filter(c => c === 1).length;
       if (singleCellCount > 1) continue; // 铁律：全局严禁 >= 2 个单格送分！
-      if (wantsZeroAnchor && attempt < maxAtt * 0.6 && singleCellCount > 0) continue; // 高难关卡前期严格保证 0 单格！
+      if (!wantsAnchor && attempt < maxAtt * 0.7 && singleCellCount > 0) continue; // 0 单格关卡前期严格 0 单格！
 
       // 4. 验证唯一解性 (CSP 约束求解器)
       const solutions = QueensSolver.solve(regions, 2);
