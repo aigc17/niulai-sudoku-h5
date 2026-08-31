@@ -157,7 +157,7 @@ export class SoundManager {
   }
 
   /**
-   * 4. 规则冲突蜂鸣警告音 (Conflict Error)
+   * 4. 规则冲突 / 错误落子短促警告双音 (Punchy Arcade Error Buzzer)
    */
   public playConflict() {
     if (!this.soundEnabled) return;
@@ -165,22 +165,44 @@ export class SoundManager {
     if (!this.ctx) return;
 
     const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    
+    // 双脉冲降调蜂鸣：模拟经典街机/消除类游戏"嗒-嗒"短促拒止音
+    const pulses = [
+      { offset: 0, f1: 220, f2: 155, dur: 0.08 },
+      { offset: 0.09, f1: 180, f2: 125, dur: 0.12 }
+    ];
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(140, t);
-    osc.frequency.linearRampToValueAtTime(110, t + 0.12);
+    pulses.forEach(p => {
+      if (!this.ctx) return;
+      const startTime = t + p.offset;
 
-    gain.gain.setValueAtTime(0.3, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      // 主振荡器：锯齿波产生清脆毛刺打击感
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
 
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(p.f1, startTime);
+      osc1.frequency.exponentialRampToValueAtTime(p.f1 * 0.7, startTime + p.dur);
 
-    osc.start(t);
-    osc.stop(t + 0.12);
-    this.triggerHaptic([40, 60, 40]);
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(p.f2, startTime);
+      osc2.frequency.exponentialRampToValueAtTime(p.f2 * 0.7, startTime + p.dur);
+
+      gain.gain.setValueAtTime(0.35, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + p.dur);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc1.start(startTime);
+      osc2.start(startTime);
+      osc1.stop(startTime + p.dur);
+      osc2.stop(startTime + p.dur);
+    });
+
+    this.triggerHaptic([35, 45, 35]);
   }
 
   /**
