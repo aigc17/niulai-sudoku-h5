@@ -30,7 +30,7 @@ export const PALETTE: PaletteColor[] = [
 ];
 
 export const PRESET_LEVELS: Record<number, LevelData> = {
-  // 第 1 关：视频教学同款 (Tutorial)
+  // 第 1 关：视频教学同款 (Tutorial - 4x4，单格多米诺极速突破)
   1: {
     id: 1,
     size: 4,
@@ -50,7 +50,7 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
       [2, 3, 3, 3]
     ]
   },
-  // 第 2 关：视频中的 Level 2
+  // 第 2 关：4x4 基础排查巩固
   2: {
     id: 2,
     size: 4,
@@ -70,53 +70,49 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
       [2, 2, 3, 3]
     ]
   },
-  // 3~5 关：5x5 进阶探索
+  // 第 3 关：4x4 进阶连通排查
   3: {
     id: 3,
-    size: 5,
+    size: 4,
     name: '第 3 关',
-    targetCount: 5,
+    targetCount: 4,
     initialTime: 280,
     solution: [
-      { row: 0, col: 0 },
+      { row: 0, col: 1 },
       { row: 1, col: 3 },
-      { row: 2, col: 1 },
-      { row: 3, col: 4 },
-      { row: 4, col: 2 }
+      { row: 2, col: 0 },
+      { row: 3, col: 2 }
     ],
     regions: [
-      [0, 0, 1, 1, 2],
-      [0, 3, 3, 1, 2],
-      [0, 3, 4, 4, 2],
-      [3, 3, 4, 2, 2],
-      [3, 4, 4, 4, 2]
+      [0, 0, 1, 1],
+      [2, 0, 1, 1],
+      [2, 2, 3, 1],
+      [2, 2, 3, 3]
     ]
   },
-  // 10 关：6x6 关卡
+  // 第 10 关：5x5 进阶探索 (经 CSP 严格验证 100% 唯一解)
   10: {
     id: 10,
-    size: 6,
+    size: 5,
     name: '第 10 关',
-    targetCount: 6,
+    targetCount: 5,
     initialTime: 240,
     solution: [
-      { row: 0, col: 0 },
+      { row: 0, col: 4 },
       { row: 1, col: 2 },
-      { row: 2, col: 4 },
-      { row: 3, col: 1 },
-      { row: 4, col: 3 },
-      { row: 5, col: 5 }
+      { row: 2, col: 0 },
+      { row: 3, col: 3 },
+      { row: 4, col: 1 }
     ],
     regions: [
-      [0, 0, 1, 1, 2, 2],
-      [0, 0, 1, 3, 3, 2],
-      [4, 0, 1, 3, 2, 2],
-      [4, 4, 5, 3, 3, 2],
-      [4, 5, 5, 5, 3, 3],
-      [4, 4, 5, 5, 5, 3]
+      [2, 2, 0, 0, 0],
+      [2, 2, 1, 0, 3],
+      [2, 2, 2, 3, 3],
+      [2, 2, 3, 3, 3],
+      [4, 4, 3, 3, 3]
     ]
   },
-  // 24 关：100% 还原用户所上传的真机截图关卡！
+  // 24 关：100% 还原用户所上传的真机截图关卡！(7x7 唯一解)
   24: {
     id: 24,
     size: 7,
@@ -145,27 +141,27 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
 };
 
 /**
- * 根据关卡 ID 获取关卡数据（支持 1 ~ 1000+ 关，确定性极速加载，绝无网络延迟）
+ * 根据关卡 ID 获取关卡数据（严格阶梯难度曲线与 100% 唯一正解保证）
  */
 export function getLevelById(levelId: number): LevelData {
   let level: LevelData;
   if (PRESET_LEVELS[levelId]) {
     level = { ...PRESET_LEVELS[levelId] };
   } else {
-    // 1000 关阶梯难度曲线
+    // 严格科学的难度爬升阶梯
     let size = 4;
-    if (levelId <= 5) {
-      size = 4;
-    } else if (levelId <= 20) {
-      size = 5;
-    } else if (levelId <= 60) {
-      size = 6;
-    } else if (levelId <= 200) {
-      size = 7;
-    } else if (levelId <= 500) {
-      size = 8;
+    if (levelId <= 3) {
+      size = 4; // 1~3 关: 4x4 新手入门
+    } else if (levelId <= 12) {
+      size = 5; // 4~12 关: 5x5 初级进阶
+    } else if (levelId <= 23) {
+      size = 6; // 13~23 关: 6x6 中级推理
+    } else if (levelId <= 50) {
+      size = 7; // 24~50 关: 7x7 高级挑战 (含第 24 关真机名局)
+    } else if (levelId <= 100) {
+      size = 8; // 51~100 关: 8x8 专家大师
     } else {
-      size = 9;
+      size = 9; // 101+ 关: 9x9 巅峰地狱
     }
 
     level = LevelGenerator.generateUniqueLevel(levelId, size);

@@ -14,6 +14,7 @@
 
 import { gameState } from '../core/state';
 import { soundManager } from '../audio/soundManager';
+import { HudRenderer } from './hudRenderer';
 
 export class ModalRenderer {
   private overlayEl: HTMLElement;
@@ -131,16 +132,20 @@ export class ModalRenderer {
         </div>
 
         <div class="quick-level-select">
-          <div class="select-label">关卡跳转：</div>
+          <div class="select-label">已解锁关卡（已通关关卡可随时重玩）：</div>
           <div class="level-btn-grid">
-            ${[1, 2, 5, 10, 24, 50, 100, 500, 1000].map(lvl => `
-              <button class="lvl-jump-btn ${lvl === user.level ? 'current' : ''}" data-lvl="${lvl}">
-                第${lvl}关
-              </button>
-            `).join('')}
+            ${[1, 2, 3, 4, 5, 10, 24, 50].map(lvl => {
+              const isUnlocked = lvl <= (user.maxUnlockedLevel || 1);
+              const isCurrent = lvl === user.level;
+              return `
+                <button class="lvl-jump-btn ${isCurrent ? 'current' : ''} ${isUnlocked ? '' : 'locked'}" data-lvl="${lvl}" ${isUnlocked ? '' : 'disabled'}>
+                  ${isUnlocked ? `第${lvl}关` : `第${lvl}关 🔒`}
+                </button>
+              `;
+            }).join('')}
           </div>
           <div class="custom-jump-row">
-            <input type="number" id="input-custom-lvl" class="custom-jump-input" min="1" max="1000" placeholder="输入关卡号" />
+            <input type="number" id="input-custom-lvl" class="custom-jump-input" min="1" max="${user.maxUnlockedLevel || 1}" placeholder="输入已解锁关卡 (1~${user.maxUnlockedLevel || 1})" />
             <button id="btn-custom-jump" class="custom-jump-btn">前往</button>
           </div>
         </div>
@@ -186,10 +191,13 @@ export class ModalRenderer {
     this.overlayEl.querySelector('#btn-custom-jump')?.addEventListener('click', () => {
       const input = this.overlayEl.querySelector('#input-custom-lvl') as HTMLInputElement;
       const lvl = parseInt(input?.value || '1', 10);
-      if (lvl >= 1 && lvl <= 1000) {
+      const maxUnlocked = user.maxUnlockedLevel || 1;
+      if (lvl >= 1 && lvl <= maxUnlocked) {
         soundManager.playButton();
         this.closeModal();
         gameState.loadLevel(lvl);
+      } else {
+        HudRenderer.showToast(`第 ${lvl} 关尚未解锁，请先通过第 ${maxUnlocked} 关！`);
       }
     });
   }

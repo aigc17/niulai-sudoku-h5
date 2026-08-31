@@ -52,6 +52,7 @@ export interface GameSnapshot {
 
 export interface UserProfile {
   level: number;
+  maxUnlockedLevel: number; // 当前用户已解锁的最高关卡 (未通关的关卡不可跳跃)
   coins: number;
   energy: number;
   lives: number;

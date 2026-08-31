@@ -23,7 +23,8 @@ export class GameStateManager {
   private static instance: GameStateManager;
 
   public user: UserProfile = {
-    level: 1, // 初始从第 1 关开始闯关体验，玩家亦可在设置中随时跳选任意关卡 (如第24关)
+    level: 1, // 初始从第 1 关开始闯关
+    maxUnlockedLevel: 1, // 当前用户已解锁的最高关卡 (未通关的关卡不可跳跃)
     coins: 46,
     energy: 166,
     lives: 2,
@@ -37,7 +38,7 @@ export class GameStateManager {
       haptics: true,
       colorblind: false,
       coordinates: false,
-      autoCross: false // 默认由玩家纯手动标记 ❌，体验纯粹的解谜推理快感
+      autoCross: false
     }
   };
 
@@ -78,7 +79,19 @@ export class GameStateManager {
     this.listeners.forEach(l => l());
   }
 
+  public onTimerTick: ((time: number) => void) | null = null;
+  public onErrorMessage: ((msg: string) => void) | null = null;
+
   public loadLevel(levelId: number) {
+    // 关卡锁判定：用户只能选择 <= maxUnlockedLevel 的已通关或当前关卡进行挑战
+    const maxUnlocked = this.user.maxUnlockedLevel || 1;
+    if (levelId > maxUnlocked) {
+      if (this.onErrorMessage) {
+        this.onErrorMessage(`第 ${levelId} 关尚未解锁，请先通过第 ${maxUnlocked} 关！`);
+      }
+      return;
+    }
+
     this.currentLevel = getLevelById(levelId);
     this.user.level = levelId;
     this.grid = Array.from({ length: this.currentLevel.size }, () =>
@@ -94,9 +107,6 @@ export class GameStateManager {
     this.saveStorage();
     this.notify();
   }
-
-  public onTimerTick: ((time: number) => void) | null = null;
-  public onErrorMessage: ((msg: string) => void) | null = null;
 
   public startTimer() {
     if (this.timerInterval) clearInterval(this.timerInterval);
@@ -438,13 +448,17 @@ export class GameStateManager {
     this.stopTimer();
     this.user.coins += 10;
     this.user.streak += 1;
+    // 成功通关：解锁下一关
+    this.user.maxUnlockedLevel = Math.max(this.user.maxUnlockedLevel || 1, this.user.level + 1);
     soundManager.playWin();
     this.saveStorage();
     this.notify();
   }
 
   public nextLevel() {
-    this.loadLevel(this.user.level + 1);
+    const nextLvl = this.user.level + 1;
+    this.user.maxUnlockedLevel = Math.max(this.user.maxUnlockedLevel || 1, nextLvl);
+    this.loadLevel(nextLvl);
   }
 
   public retryLevel() {
@@ -456,6 +470,7 @@ export class GameStateManager {
    */
   public resetProgress() {
     this.user.level = 1;
+    this.user.maxUnlockedLevel = 1;
     this.user.coins = 0;
     this.user.streak = 0;
     this.user.props = { detector: 3, hint: 3 };
