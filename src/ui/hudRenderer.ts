@@ -106,21 +106,15 @@ export class HudRenderer {
       </div>
     `;
 
-    // 绑定设置按钮、攻略按钮与选关按钮（双重保障 click 与 touchend，零延迟即时触发）
+    // 绑定设置按钮、攻略按钮与选关按钮
     const bindHeaderBtn = (id: string, action: () => void) => {
       const btn = this.headerEl.querySelector(id) as HTMLElement | null;
       if (!btn) return;
-      let lastTrigger = 0;
-      const handler = (e: Event) => {
-        const now = Date.now();
-        if (now - lastTrigger < 300) return;
-        lastTrigger = now;
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         soundManager.playButton();
         action();
-      };
-      btn.addEventListener('click', handler);
-      btn.addEventListener('touchend', handler);
+      });
     };
 
     bindHeaderBtn('#btn-settings', () => this.onOpenSettings());
@@ -140,7 +134,7 @@ export class HudRenderer {
   }
 
   /**
-   * 渲染三公理规则胶囊牌
+   * 渲染关卡核心三大规则提示条 (马卡龙三列精巧卡片)
    */
   public renderRulesBanner() {
     this.bannerEl.innerHTML = `
@@ -218,20 +212,14 @@ export class HudRenderer {
       </div>
     `;
 
-    // 绑定底部按钮事件（双重保障 click 与 touchend，杜绝移动端丢事件）
+    // 绑定底部按钮事件
     const bindBtn = (id: string, action: () => void) => {
       const btn = this.toolbarEl.querySelector(id) as HTMLElement | null;
       if (!btn) return;
-      let lastTriggerTime = 0;
-      const handler = (e: Event) => {
-        const now = Date.now();
-        if (now - lastTriggerTime < 300) return; // 防重复双触
-        lastTriggerTime = now;
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
         action();
-      };
-      btn.addEventListener('click', handler);
-      btn.addEventListener('touchend', handler);
+      });
     };
 
     bindBtn('#btn-clear', () => gameState.clearBoard());

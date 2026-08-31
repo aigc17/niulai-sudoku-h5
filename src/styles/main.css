@@ -13,12 +13,12 @@
  */
 
 :root {
-  --primary-color: #007AFF; /* iOS Blue */
-  --bg-color: #F2F2F7;      /* iOS System Gray */
+  --primary-color: #007AFF;
+  --bg-color: #F2F2F7;
   --card-bg: #FFFFFF;
-  --text-dark: #1C1C1E;     /* iOS Label */
-  --text-red: #FF3B30;      /* iOS Red */
-  --text-gray: #8E8E93;     /* iOS Secondary Label */
+  --text-dark: #1C1C1E;
+  --text-red: #FF3B30;
+  --text-gray: #8E8E93;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 20px);
 }
@@ -36,6 +36,7 @@ html, body {
   height: 100%;
   height: 100dvh;
   overflow: hidden;
+  touch-action: manipulation;
 }
 
 body {
@@ -49,7 +50,18 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  touch-action: none;
+  touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea,
+.game-icon-btn, .tool-btn, .level-title-btn,
+.modal-card, .modal-overlay, .hud-header, .bottom-toolbar,
+.lvl-jump-btn, .modal-primary-btn, .modal-secondary-btn, .modal-close-x, .modal-text-btn, .custom-jump-btn {
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.06);
 }
 
 .game-container {
@@ -68,100 +80,148 @@ body {
   overflow: hidden;
 }
 
-/* ================= 顶部 HUD ================= */
-.hud-header { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
-.hud-top-row { display: flex; justify-content: space-between; align-items: center; }
-.hud-left-group, .hud-right-group { display: flex; align-items: center; gap: 6px; }
-
-.game-icon-btn {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: #FFFFFF; border: 1.5px solid #D6E4EC; color: #34495E;
-  display: inline-flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 6px rgba(44, 62, 80, 0.08); cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-.game-icon-btn:active { transform: scale(0.92); background: #F2F7FA; }
-.hud-svg-icon { width: 18px; height: 18px; }
-
-.coin-badge {
-  display: inline-flex; align-items: center; gap: 4px; background: #FFFFFF;
-  border: 1.5px solid #F5CBA7; padding: 3px 8px; border-radius: 20px;
-  box-shadow: 0 2px 6px rgba(243, 156, 18, 0.12);
-}
-.coin-icon { font-size: 14px; }
-.badge-val { font-size: 12px; font-weight: 800; color: #D35400; }
-
-.hud-center-group { text-align: center; }
-
-.level-title-btn {
-  background: #FFFFFF; border: 1.5px solid #D6E4EC; border-radius: 20px;
-  padding: 4px 12px; box-shadow: 0 2px 6px rgba(44, 62, 80, 0.08);
-  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
-  transition: transform 0.15s ease;
-}
-.level-title-btn:active { transform: scale(0.95); }
-.level-title-text { font-size: 14px; font-weight: 900; color: #2C3E50; letter-spacing: 0.5px; }
-.level-arrow { font-size: 11px; color: #7F8C8D; }
-
-.streak-badge {
-  display: inline-flex; align-items: center; gap: 4px; background: #FFFFFF;
-  border: 1.5px solid #F9E79F; padding: 3px 8px; border-radius: 20px;
-  box-shadow: 0 2px 6px rgba(241, 196, 15, 0.15);
-}
-.trophy-icon { font-size: 13px; }
-.streak-text { font-size: 12px; font-weight: 800; color: #B7950B; }
-
-.hud-status-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 0px;
-}
-
-.status-pill {
+.hud-nav-side {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: #FFFFFF;
-  border: 1.5px solid #D6E4EC;
-  padding: 3px 12px;
-  border-radius: 18px;
-  font-size: 12px;
+  gap: 8px;
+}
+.hud-nav-left { justify-self: start; }
+.hud-nav-right { justify-self: end; }
+
+.game-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--hud-surface);
+  border: 1px solid var(--hud-line);
+  color: #3D4F61;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(27, 40, 56, 0.05);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.game-icon-btn:active { transform: scale(0.94); background: #F4F7FA; }
+.hud-svg-icon { width: 18px; height: 18px; }
+
+.level-title-btn {
+  height: 40px;
+  background: var(--hud-surface);
+  border: 1px solid var(--hud-line);
+  border-radius: 12px;
+  padding: 0 14px;
+  box-shadow: 0 1px 2px rgba(27, 40, 56, 0.05);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s ease;
+}
+.level-title-btn:active { transform: scale(0.96); }
+.level-title-text {
+  font-size: 17px;
   font-weight: 700;
-  color: #2C3E50;
-  box-shadow: 0 2px 6px rgba(44, 62, 80, 0.05);
+  color: var(--hud-ink);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.level-arrow {
+  font-size: 11px;
+  color: var(--hud-muted);
+  line-height: 1;
+  margin-top: 1px;
 }
 
+.hud-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.metric-chip,
+.coin-badge,
+.streak-badge,
+.status-pill {
+  height: 36px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--hud-surface);
+  border: 1px solid var(--hud-line);
+  border-radius: 12px;
+  padding: 0 6px;
+  box-shadow: 0 1px 2px rgba(27, 40, 56, 0.04);
+}
+
+.metric-ico,
+.coin-icon,
+.trophy-icon {
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.badge-val,
+.streak-text,
+.pill-num {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--hud-ink);
+}
+
+.badge-val { color: #C56A16; }
+.streak-text { color: #A07A12; }
+
 .pill-label {
-  color: #7F8C8D;
+  color: var(--hud-muted);
   font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .highlight-red {
-  color: #E74C3C;
+  color: #D94A3D;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pill-bull-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 /* ================= 规则胶囊 ================= */
 .rules-banner {
-  margin: 3px 0;
+  margin: 2px 0 0 0;
   flex-shrink: 0;
 }
 
 .rules-card-container {
-  display: flex;
-  background: #FFFFFF;
-  border: 1.5px solid #D6E4EC;
-  border-radius: 12px;
-  padding: 4px 6px;
-  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.05);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  background: var(--hud-surface);
+  border: 1px solid var(--hud-line);
+  border-radius: var(--hud-radius);
+  padding: 10px 4px;
+  box-shadow: 0 1px 2px rgba(27, 40, 56, 0.04);
 }
 
 .rule-card {
-  flex: 1;
   text-align: center;
-  padding: 1px 3px;
+  padding: 0 8px;
   position: relative;
 }
 
@@ -169,22 +229,22 @@ body {
   content: "";
   position: absolute;
   right: 0;
-  top: 15%;
-  height: 70%;
+  top: 18%;
+  height: 64%;
   width: 1px;
-  background-color: #E2EDF3;
+  background-color: var(--hud-line);
 }
 
 .rule-title {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #2C3E50;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hud-ink);
+  line-height: 1.3;
+  letter-spacing: 0.02em;
 }
 
 .rule-sub {
-  font-size: 9px;
-  color: #7F8C8D;
-  margin-top: 1px;
+  display: none;
 }
 
 /* ================= 主棋盘区域 ================= */

@@ -36,16 +36,10 @@ export class ModalRenderer {
   private bindModalBtn(selector: string, action: () => void) {
     const btn = this.overlayEl.querySelector(selector) as HTMLElement | null;
     if (!btn) return;
-    let last = 0;
-    const handler = (e: Event) => {
-      const now = Date.now();
-      if (now - last < 300) return;
-      last = now;
+    btn.addEventListener('click', (e) => {
       e.stopPropagation();
       action();
-    };
-    btn.addEventListener('click', handler);
-    btn.addEventListener('touchend', handler);
+    });
   }
 
   /**

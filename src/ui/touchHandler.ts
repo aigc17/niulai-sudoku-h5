@@ -33,11 +33,11 @@ export class TouchHandler {
   }
 
   private bindEvents() {
-    // 容器监听触控起始，全局 window 监听持续滑动与抬起（确保高速划线 0 丢帧）
+    // 触控事件严格限定在棋盘容器内部，绝不污染全局 window（保障顶部 HUD 与弹窗 100% 原生清脆触发）
     this.container.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
-    window.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-    window.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
-    window.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
+    this.container.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+    this.container.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+    this.container.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
 
     // 鼠标桌面端兼容
     this.container.addEventListener('mousedown', this.handleMouseDown.bind(this));
