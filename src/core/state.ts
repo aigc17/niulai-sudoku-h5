@@ -466,6 +466,34 @@ export class GameStateManager {
   }
 
   /**
+   * 倒计时耗尽复活：保留当前棋盘推理进度，续时 60 秒继续挑战
+   */
+  public reviveWithTime(extraSeconds: number = 60) {
+    this.status = 'PLAYING';
+    this.timeRemaining = extraSeconds;
+    this.startTimer();
+    soundManager.playButton();
+    this.notify();
+  }
+
+  /**
+   * 倒计时耗尽复活：自动落下一只正确牛头并加时 60 秒继续挑战
+   */
+  public reviveWithHint() {
+    this.status = 'PLAYING';
+    this.timeRemaining = 60;
+    const target = QueensSolver.getSmartHint(this.grid, this.currentLevel.regions);
+    if (target) {
+      this.grid[target.row][target.col] = CellState.ANIMAL;
+      this.lastPopCell = { row: target.row, col: target.col };
+      soundManager.playAnimal();
+      this.evaluateBoard();
+    }
+    this.startTimer();
+    this.notify();
+  }
+
+  /**
    * 重置游戏进度回到第 1 关
    */
   public resetProgress() {

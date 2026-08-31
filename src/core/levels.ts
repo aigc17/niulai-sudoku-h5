@@ -36,7 +36,7 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     size: 4,
     name: '第 1 关',
     targetCount: 4,
-    initialTime: 300,
+    initialTime: 240,
     solution: [
       { row: 0, col: 1 },
       { row: 1, col: 3 },
@@ -56,7 +56,7 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     size: 4,
     name: '第 2 关',
     targetCount: 4,
-    initialTime: 300,
+    initialTime: 240,
     solution: [
       { row: 0, col: 1 },
       { row: 1, col: 3 },
@@ -76,7 +76,7 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     size: 4,
     name: '第 3 关',
     targetCount: 4,
-    initialTime: 280,
+    initialTime: 240,
     solution: [
       { row: 0, col: 1 },
       { row: 1, col: 3 },
@@ -96,7 +96,7 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     size: 5,
     name: '第 10 关',
     targetCount: 5,
-    initialTime: 240,
+    initialTime: 300,
     solution: [
       { row: 0, col: 4 },
       { row: 1, col: 2 },
@@ -118,7 +118,7 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     size: 7,
     name: '第 24 关',
     targetCount: 7,
-    initialTime: 209,
+    initialTime: 420,
     solution: [
       { row: 0, col: 1 },
       { row: 1, col: 6 },
@@ -141,32 +141,34 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
 };
 
 /**
- * 根据关卡 ID 获取关卡数据（严格阶梯难度曲线与 100% 唯一正解保证）
+ * 根据关卡 ID 获取关卡数据（严格阶梯难度曲线、科学时限分配与 100% 唯一正解保证）
  */
 export function getLevelById(levelId: number): LevelData {
   let level: LevelData;
   if (PRESET_LEVELS[levelId]) {
     level = { ...PRESET_LEVELS[levelId] };
   } else {
-    // 严格科学的难度爬升阶梯
+    // 严格科学的难度爬升阶梯与合理倒计时分配
     let size = 4;
+    let initialTime = 240;
     if (levelId <= 3) {
-      size = 4; // 1~3 关: 4x4 新手入门 (保底独立单格)
+      size = 4; initialTime = 240; // 1~3 关: 4x4 (4分钟)
     } else if (levelId <= 10) {
-      size = 5; // 4~10 关: 5x5 初级进阶 (保底独立单格)
+      size = 5; initialTime = 300; // 4~10 关: 5x5 (5分钟)
     } else if (levelId <= 23) {
-      size = 6; // 11~23 关: 6x6 中级推理 (破局点生成)
+      size = 6; initialTime = 360; // 11~23 关: 6x6 (6分钟)
     } else if (levelId <= 50) {
-      size = 7; // 24~50 关: 7x7 高级挑战 (含第 24 关真机名局)
+      size = 7; initialTime = 420; // 24~50 关: 7x7 (7分钟)
     } else if (levelId <= 100) {
-      size = 8; // 51~100 关: 8x8 专家大师 (破局点生成)
+      size = 8; initialTime = 480; // 51~100 关: 8x8 (8分钟)
     } else if (levelId <= 250) {
-      size = 9; // 101~250 关: 9x9 巅峰大师 (破局点生成)
+      size = 9; initialTime = 540; // 101~250 关: 9x9 (9分钟)
     } else {
-      size = 10; // 251+ 关: 10x10 地狱巅峰 (破局点生成)
+      size = 10; initialTime = 600; // 251+ 关: 10x10 (10分钟)
     }
 
     level = LevelGenerator.generateUniqueLevel(levelId, size);
+    level.initialTime = initialTime;
   }
 
   if (!level.solution || level.solution.length === 0) {

@@ -71,22 +71,39 @@ export class ModalRenderer {
   }
 
   /**
-   * 失败重试弹窗
+   * 失败/超时结算弹窗 (提供加时继续、获得提示、重新开始三重视角)
    */
   public showLoseModal() {
     this.overlayEl.classList.remove('hidden');
     this.overlayEl.innerHTML = `
       <div class="modal-card lose-card animate-pop">
-        <h2 class="modal-title lose-title">挑战未完成</h2>
-        <p class="modal-subtitle">别气馁，稍加推理即可破解！</p>
+        <div class="lose-icon">⏱️</div>
+        <h2 class="modal-title lose-title">时间用尽啦</h2>
+        <p class="modal-subtitle">别气馁，选择下方方案继续破解！</p>
         
-        <div class="modal-btn-row">
-          <button id="btn-retry-level" class="modal-primary-btn">
-            重新挑战
+        <div class="lose-actions-column">
+          <button id="btn-revive-time" class="modal-primary-btn btn-revive">
+            ⏱️ 加时 60 秒继续挑战
+          </button>
+          <button id="btn-revive-hint" class="modal-secondary-btn btn-hint-revive">
+            💡 获得提示并继续 (+60s)
+          </button>
+          <button id="btn-retry-level" class="modal-text-btn">
+            🔄 重新开始本关
           </button>
         </div>
       </div>
     `;
+
+    this.overlayEl.querySelector('#btn-revive-time')?.addEventListener('click', () => {
+      this.closeModal();
+      gameState.reviveWithTime(60);
+    });
+
+    this.overlayEl.querySelector('#btn-revive-hint')?.addEventListener('click', () => {
+      this.closeModal();
+      gameState.reviveWithHint();
+    });
 
     this.overlayEl.querySelector('#btn-retry-level')?.addEventListener('click', () => {
       soundManager.playButton();
