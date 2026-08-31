@@ -116,6 +116,16 @@ export class HudRenderer {
   }
 
   /**
+   * 独立极速刷新倒计时数字，避免触发全屏棋盘重绘
+   */
+  public updateTimer(time: number) {
+    const timerNumEl = this.headerEl.querySelector('.timer-pill .pill-num');
+    if (timerNumEl) {
+      timerNumEl.textContent = time.toString();
+    }
+  }
+
+  /**
    * 渲染三公理规则胶囊牌
    */
   public renderRulesBanner() {

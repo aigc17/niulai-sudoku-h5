@@ -95,13 +95,17 @@ export class GameStateManager {
     this.notify();
   }
 
+  public onTimerTick: ((time: number) => void) | null = null;
+
   public startTimer() {
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = window.setInterval(() => {
       if (this.status !== 'PLAYING') return;
       if (this.timeRemaining > 0) {
         this.timeRemaining--;
-        this.notify();
+        if (this.onTimerTick) {
+          this.onTimerTick(this.timeRemaining);
+        }
       } else {
         this.handleTimeOut();
       }

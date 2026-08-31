@@ -36,6 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const boardRenderer = new BoardRenderer(boardEl);
   new TouchHandler(boardEl);
 
+  // 绑定独立倒计时刷新回调，彻底杜绝背景秒级触发棋盘全屏重绘
+  gameState.onTimerTick = (time: number) => {
+    hudRenderer.updateTimer(time);
+  };
+
   // 2. 绑定色盲辅助模式悬浮按钮
   colorblindBtn.addEventListener('click', () => {
     gameState.toggleColorblind();
