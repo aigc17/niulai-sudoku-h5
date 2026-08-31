@@ -14,6 +14,7 @@
 
 import { LevelData, PaletteColor } from '../types';
 import { LevelGenerator } from './generator';
+import { QueensSolver } from './solver';
 
 export const PALETTE: PaletteColor[] = [
   { id: 0, bg: '#F07C68', border: '#E06550', name: '珊瑚橙红', symbol: '●' },
@@ -36,6 +37,12 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     name: '第 1 关',
     targetCount: 4,
     initialTime: 300,
+    solution: [
+      { row: 0, col: 1 },
+      { row: 1, col: 3 },
+      { row: 2, col: 0 },
+      { row: 3, col: 2 }
+    ],
     regions: [
       [2, 0, 1, 1],
       [2, 3, 1, 1],
@@ -50,6 +57,12 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     name: '第 2 关',
     targetCount: 4,
     initialTime: 300,
+    solution: [
+      { row: 0, col: 1 },
+      { row: 1, col: 3 },
+      { row: 2, col: 0 },
+      { row: 3, col: 2 }
+    ],
     regions: [
       [0, 0, 1, 1],
       [0, 0, 3, 1],
@@ -64,6 +77,13 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     name: '第 3 关',
     targetCount: 5,
     initialTime: 280,
+    solution: [
+      { row: 0, col: 0 },
+      { row: 1, col: 3 },
+      { row: 2, col: 1 },
+      { row: 3, col: 4 },
+      { row: 4, col: 2 }
+    ],
     regions: [
       [0, 0, 1, 1, 2],
       [0, 3, 3, 1, 2],
@@ -79,6 +99,14 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     name: '第 10 关',
     targetCount: 6,
     initialTime: 240,
+    solution: [
+      { row: 0, col: 0 },
+      { row: 1, col: 2 },
+      { row: 2, col: 4 },
+      { row: 3, col: 1 },
+      { row: 4, col: 3 },
+      { row: 5, col: 5 }
+    ],
     regions: [
       [0, 0, 1, 1, 2, 2],
       [0, 0, 1, 3, 3, 2],
@@ -95,6 +123,15 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
     name: '第 24 关',
     targetCount: 7,
     initialTime: 209,
+    solution: [
+      { row: 0, col: 1 },
+      { row: 1, col: 6 },
+      { row: 2, col: 4 },
+      { row: 3, col: 0 },
+      { row: 4, col: 2 },
+      { row: 5, col: 5 },
+      { row: 6, col: 3 }
+    ],
     regions: [
       [0, 1, 1, 2, 2, 2, 2],
       [0, 0, 1, 3, 3, 2, 2],
@@ -111,25 +148,35 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
  * 根据关卡 ID 获取关卡数据（支持 1 ~ 1000+ 关，确定性极速加载，绝无网络延迟）
  */
 export function getLevelById(levelId: number): LevelData {
+  let level: LevelData;
   if (PRESET_LEVELS[levelId]) {
-    return PRESET_LEVELS[levelId];
-  }
-
-  // 1000 关阶梯难度曲线
-  let size = 4;
-  if (levelId <= 5) {
-    size = 4;
-  } else if (levelId <= 20) {
-    size = 5;
-  } else if (levelId <= 60) {
-    size = 6;
-  } else if (levelId <= 200) {
-    size = 7;
-  } else if (levelId <= 500) {
-    size = 8;
+    level = { ...PRESET_LEVELS[levelId] };
   } else {
-    size = 9;
+    // 1000 关阶梯难度曲线
+    let size = 4;
+    if (levelId <= 5) {
+      size = 4;
+    } else if (levelId <= 20) {
+      size = 5;
+    } else if (levelId <= 60) {
+      size = 6;
+    } else if (levelId <= 200) {
+      size = 7;
+    } else if (levelId <= 500) {
+      size = 8;
+    } else {
+      size = 9;
+    }
+
+    level = LevelGenerator.generateUniqueLevel(levelId, size);
   }
 
-  return LevelGenerator.generateUniqueLevel(levelId, size);
+  if (!level.solution || level.solution.length === 0) {
+    const solved = QueensSolver.solve(level.regions);
+    if (solved.length > 0) {
+      level.solution = solved[0];
+    }
+  }
+
+  return level;
 }
