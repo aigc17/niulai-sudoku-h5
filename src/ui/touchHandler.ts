@@ -17,10 +17,15 @@ import { CellState } from '../types';
 
 export class TouchHandler {
   private container: HTMLElement;
-  private isDragging: boolean = false;
+  private isPointerDown: boolean = false;
+  private startPoint: { x: number; y: number } | null = null;
   private startCell: { row: number; col: number } | null = null;
   private dragMode: CellState | null = null;
+  private isDragging: boolean = false;
   private touchedCells = new Set<string>();
+
+  private lastTapCell: string | null = null;
+  private lastTapTime: number = 0;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -28,10 +33,11 @@ export class TouchHandler {
   }
 
   private bindEvents() {
-    // 阻止移动端页面橡皮筋滚动与缩放
+    // 阻止移动端橡皮筋滚动，实现极致跟手的连划排查
     this.container.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
     this.container.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
     this.container.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+    this.container.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
 
     // 鼠标桌面端兼容
     this.container.addEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -51,93 +57,102 @@ export class TouchHandler {
     };
   }
 
-  private handleTouchStart(e: TouchEvent) {
-    if (e.touches.length > 1) return;
-    e.preventDefault();
-
-    const touch = e.touches[0];
-    const cell = this.getCellFromPoint(touch.clientX, touch.clientY);
+  private startInteraction(clientX: number, clientY: number) {
+    const cell = this.getCellFromPoint(clientX, clientY);
     if (!cell) return;
 
-    this.isDragging = true;
+    this.isPointerDown = true;
+    this.isDragging = false;
+    this.startPoint = { x: clientX, y: clientY };
     this.startCell = cell;
     this.touchedCells.clear();
     this.touchedCells.add(`${cell.row},${cell.col}`);
+
+    const curState = gameState.grid[cell.row][cell.col];
+    if (curState === CellState.EMPTY) {
+      this.dragMode = CellState.CROSS; // 滑动模式：一划批量打叉 ❌
+    } else if (curState === CellState.CROSS || curState === CellState.ERROR_CROSS) {
+      this.dragMode = CellState.EMPTY; // 滑动模式：一划批量擦除叉叉
+    } else {
+      this.dragMode = null; // 牛头不参与连续擦除
+    }
   }
 
-  private handleTouchMove(e: TouchEvent) {
-    if (!this.isDragging || e.touches.length > 1) return;
-    e.preventDefault();
+  private moveInteraction(clientX: number, clientY: number) {
+    if (!this.isPointerDown || !this.startPoint || !this.startCell) return;
 
-    const touch = e.touches[0];
-    const cell = this.getCellFromPoint(touch.clientX, touch.clientY);
-    if (!cell) return;
-
-    const key = `${cell.row},${cell.col}`;
-    if (!this.touchedCells.has(key)) {
-      this.touchedCells.add(key);
-
-      // 滑动多选模式：在滑过的空白格上连续填充 ❌
-      if (this.dragMode === null) {
-        this.dragMode = CellState.CROSS;
+    const dist = Math.hypot(clientX - this.startPoint.x, clientY - this.startPoint.y);
+    if (dist > 7) {
+      if (!this.isDragging) {
+        this.isDragging = true;
+        // 进入滑动状态：立即对起始格子生效连划
+        if (this.dragMode !== null && gameState.grid[this.startCell.row][this.startCell.col] !== CellState.ANIMAL) {
+          gameState.setCellState(this.startCell.row, this.startCell.col, this.dragMode);
+        }
       }
+    }
 
-      if (gameState.grid[cell.row][cell.col] === CellState.EMPTY) {
-        gameState.setCellState(cell.row, cell.col, CellState.CROSS, false);
+    if (this.isDragging && this.dragMode !== null) {
+      const cell = this.getCellFromPoint(clientX, clientY);
+      if (!cell) return;
+
+      const key = `${cell.row},${cell.col}`;
+      if (!this.touchedCells.has(key)) {
+        this.touchedCells.add(key);
+        // 滑过区域批量快速打叉或清除（保护已有牛头）
+        if (gameState.grid[cell.row][cell.col] !== CellState.ANIMAL) {
+          gameState.setCellState(cell.row, cell.col, this.dragMode);
+        }
       }
     }
   }
 
-  private lastTapCell: string | null = null;
-  private lastTapTime: number = 0;
+  private endInteraction() {
+    if (!this.isPointerDown) return;
 
-  private handleTouchEnd(e: TouchEvent) {
-    if (!this.isDragging) return;
-    e.preventDefault();
-
-    if (this.touchedCells.size <= 1 && this.startCell) {
+    if (!this.isDragging && this.startCell) {
+      // 纯点击手势：精准触发单点画叉或双击放牛
       this.processTap(this.startCell.row, this.startCell.col);
     }
 
+    this.isPointerDown = false;
     this.isDragging = false;
+    this.startPoint = null;
     this.startCell = null;
     this.dragMode = null;
     this.touchedCells.clear();
   }
 
+  private handleTouchStart(e: TouchEvent) {
+    if (e.touches.length > 1) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    this.startInteraction(touch.clientX, touch.clientY);
+  }
+
+  private handleTouchMove(e: TouchEvent) {
+    if (!this.isPointerDown || e.touches.length > 1) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    this.moveInteraction(touch.clientX, touch.clientY);
+  }
+
+  private handleTouchEnd(e: TouchEvent) {
+    e.preventDefault();
+    this.endInteraction();
+  }
+
   private handleMouseDown(e: MouseEvent) {
     if (e.button !== 0) return;
-    const cell = this.getCellFromPoint(e.clientX, e.clientY);
-    if (!cell) return;
-
-    this.isDragging = true;
-    this.startCell = cell;
-    this.touchedCells.clear();
-    this.touchedCells.add(`${cell.row},${cell.col}`);
+    this.startInteraction(e.clientX, e.clientY);
   }
 
   private handleMouseMove(e: MouseEvent) {
-    if (!this.isDragging) return;
-    const cell = this.getCellFromPoint(e.clientX, e.clientY);
-    if (!cell) return;
-
-    const key = `${cell.row},${cell.col}`;
-    if (!this.touchedCells.has(key)) {
-      this.touchedCells.add(key);
-      if (gameState.grid[cell.row][cell.col] === CellState.EMPTY) {
-        gameState.setCellState(cell.row, cell.col, CellState.CROSS, false);
-      }
-    }
+    this.moveInteraction(e.clientX, e.clientY);
   }
 
   private handleMouseUp() {
-    if (!this.isDragging) return;
-    if (this.touchedCells.size <= 1 && this.startCell) {
-      this.processTap(this.startCell.row, this.startCell.col);
-    }
-    this.isDragging = false;
-    this.startCell = null;
-    this.touchedCells.clear();
+    this.endInteraction();
   }
 
   private processTap(r: number, c: number) {
@@ -146,7 +161,7 @@ export class TouchHandler {
     const current = gameState.grid[r][c];
 
     if (this.lastTapCell === key && now - this.lastTapTime < 350) {
-      // 双击：试图在 (r, c) 放置牛头（严格校验唯一正解）
+      // 双击：在 (r, c) 放置牛头（严格校验正解）
       if (current === CellState.ANIMAL) {
         gameState.setCellState(r, c, CellState.EMPTY);
       } else {
