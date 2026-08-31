@@ -96,6 +96,7 @@ export class GameStateManager {
   }
 
   public onTimerTick: ((time: number) => void) | null = null;
+  public onErrorMessage: ((msg: string) => void) | null = null;
 
   public startTimer() {
     if (this.timerInterval) clearInterval(this.timerInterval);
@@ -165,6 +166,9 @@ export class GameStateManager {
         this.lastErrorCell = { row: r, col: c };
         this.lastPopCell = null;
         soundManager.playConflict();
+        if (this.onErrorMessage) {
+          this.onErrorMessage('该位置选错啦，已为你标红排除！');
+        }
         this.grid[r][c] = next;
         this.evaluateBoard();
         setTimeout(() => {

@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
     hudRenderer.updateTimer(time);
   };
 
+  // 绑定悬浮式 Toast 错误提示回调，绝对定位不挤压主棋盘
+  gameState.onErrorMessage = (msg: string) => {
+    HudRenderer.showToast(msg);
+  };
+
   // 2. 绑定色盲辅助模式悬浮按钮
   colorblindBtn.addEventListener('click', () => {
     gameState.toggleColorblind();

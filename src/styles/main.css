@@ -271,23 +271,41 @@ body {
   height: 100%;
 }
 
-.conflict-notice-bar {
+/* ================= 全局悬浮式 Toast (零布局挤压) ================= */
+.toast-floating-container {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top, 18px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  pointer-events: none;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: #FDEDEC;
-  border: 1.5px solid #F5B7B1;
-  color: #C0392B;
-  padding: 5px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 6px;
+  width: 90%;
+  max-width: 360px;
 }
 
-.conflict-notice-icon {
-  font-size: 14px;
+.toast-pill {
+  background: rgba(253, 237, 236, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid #F5B7B1;
+  color: #C0392B;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgba(231, 76, 60, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: toastSlideDown 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes toastSlideDown {
+  0% { transform: translateY(-16px) scale(0.9); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 .coord-ruler {
@@ -731,16 +749,16 @@ body {
 }
 
 .quick-level-select {
-  margin-top: 24px;
+  margin-top: 20px;
   text-align: left;
   border-top: 1px solid #E5E5EA;
-  padding-top: 16px;
+  padding-top: 14px;
 }
 
 .select-label {
   font-size: 13px;
   color: var(--text-gray);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .level-btn-grid {
@@ -766,8 +784,8 @@ body {
 
 .custom-jump-row {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .custom-jump-input {
@@ -775,7 +793,7 @@ body {
   border: none;
   background: var(--bg-color);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: 14px;
   outline: none;
 }
@@ -785,7 +803,7 @@ body {
   color: #FFF;
   border: none;
   border-radius: 8px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

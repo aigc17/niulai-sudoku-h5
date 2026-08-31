@@ -95,7 +95,6 @@ export class HudRenderer {
           <span class="pill-num highlight-red">${time}</span>
         </div>
       </div>
-      ${this.renderConflictNotice()}
     `;
 
     // 绑定设置按钮与选关按钮
@@ -222,26 +221,29 @@ export class HudRenderer {
     });
   }
 
-  private renderConflictNotice(): string {
-    if (gameState.conflicts.length === 0) return '';
-
-    const c = gameState.conflicts[0];
-    let msg = '';
-    if (c.type === 'ROW') {
-      msg = `第 ${c.coords[0].row + 1} 行已有 2 个牛头（每行只能放1个）`;
-    } else if (c.type === 'COL') {
-      msg = `第 ${c.coords[0].col + 1} 列已有 2 个牛头（每列只能放1个）`;
-    } else if (c.type === 'REGION') {
-      msg = `同一种颜色区域放了 2 个牛头（每种颜色只能放1个）`;
-    } else if (c.type === 'ADJACENT') {
-      msg = `两个牛头挨在一起了（四周含斜向不能相邻）`;
+  /**
+   * 全局悬浮式 Toast 错误提示（绝对定位悬浮，绝不挤压主棋盘导致布局跳动）
+   */
+  public static showToast(msg: string) {
+    let toastContainer = document.getElementById('global-toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'global-toast-container';
+      toastContainer.className = 'toast-floating-container';
+      document.body.appendChild(toastContainer);
     }
 
-    return `
-      <div class="conflict-notice-bar">
-        <span class="conflict-notice-icon">⚠️</span>
-        <span class="conflict-notice-text">${msg}</span>
+    toastContainer.innerHTML = `
+      <div class="toast-pill">
+        <span class="toast-icon">⚠️</span>
+        <span class="toast-text">${msg}</span>
       </div>
     `;
+
+    setTimeout(() => {
+      if (toastContainer) {
+        toastContainer.innerHTML = '';
+      }
+    }, 2000);
   }
 }
