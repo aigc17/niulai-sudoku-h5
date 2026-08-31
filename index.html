@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>牛来数独 - 高玩区域数独</title>
+  <link rel="stylesheet" href="/src/styles/main.css" />
+</head>
+<body>
+  <div id="app" class="game-container">
+    <!-- Top HUD Header -->
+    <header id="hud-header" class="hud-header"></header>
+
+    <!-- Rule Banner -->
+    <section id="rules-banner" class="rules-banner"></section>
+
+    <!-- Main Game Board Container -->
+    <main class="board-wrapper">
+      <div id="board-container" class="board-container"></div>
+      <div id="colorblind-toggle-btn" class="colorblind-float-btn">
+        <span class="cb-icon">ABC</span>
+        <span class="cb-text">色盲辅助</span>
+      </div>
+    </main>
+
+    <!-- Bottom Actions & Props Toolbar -->
+    <footer id="bottom-toolbar" class="bottom-toolbar"></footer>
+
+    <!-- Modals Layer -->
+    <div id="modal-overlay" class="modal-overlay hidden"></div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

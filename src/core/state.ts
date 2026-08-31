@@ -1,0 +1,399 @@
+/**
+ * [INPUT]: CellState, LevelData, UserProfile, GameStatus, ConflictInfo - 引用自 src/types.ts
+ *          QueensSolver - 引用自 src/core/solver.ts, getLevelById - 引用自 src/core/levels.ts
+ *          soundManager - 引用自 src/audio/soundManager.ts
+ * [OUTPUT]: GameStateManager 响应式状态机类及 gameState 单例
+ * [POS]: 全局响应式状态机与业务逻辑枢纽，驱动数据流、撤销栈、倒计时与持久化
+ *
+ * [自指声明]
+ * 1. 一旦我被更新，必须更新本文件 Header
+ * 2. 影响外部接口则更新所属 folder.md/CLAUDE.md
+ * 3. 架构级变动则更新根目录 CLAUDE.md
+ * 4. 若依赖的文件 POS 变化，需检查本文件 INPUT 是否仍然准确
+ *
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+import { CellState, LevelData, UserProfile, GameStatus, ConflictInfo } from '../types';
+import { QueensSolver } from './solver';
+import { getLevelById } from './levels';
+import { soundManager } from '../audio/soundManager';
+
+export class GameStateManager {
+  private static instance: GameStateManager;
+
+  public user: UserProfile = {
+    level: 1, // 初始从第 1 关开始闯关体验，玩家亦可在设置中随时跳选任意关卡 (如第24关)
+    coins: 46,
+    energy: 166,
+    lives: 2,
+    streak: 6,
+    props: {
+      detector: 1,
+      hint: 1
+    },
+    settings: {
+      sound: true,
+      haptics: true,
+      colorblind: false,
+      coordinates: false,
+      autoCross: false // 默认由玩家纯手动标记 ❌，体验纯粹的解谜推理快感
+    }
+  };
+
+  public currentLevel!: LevelData;
+  public grid: CellState[][] = [];
+  public conflicts: ConflictInfo[] = [];
+  public status: GameStatus = 'PLAYING';
+  public timeRemaining: number = 209;
+  public remainingPonies: number = 7;
+
+  private history: CellState[][][] = [];
+  private timerInterval: number | null = null;
+  private listeners: (() => void)[] = [];
+
+  private constructor() {
+    this.loadStorage();
+    this.loadLevel(this.user.level);
+  }
+
+  public static getInstance(): GameStateManager {
+    if (!GameStateManager.instance) {
+      GameStateManager.instance = new GameStateManager();
+    }
+    return GameStateManager.instance;
+  }
+
+  public subscribe(listener: () => void): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  private notify() {
+    this.listeners.forEach(l => l());
+  }
+
+  public loadLevel(levelId: number) {
+    this.currentLevel = getLevelById(levelId);
+    this.user.level = levelId;
+    this.grid = Array.from({ length: this.currentLevel.size }, () =>
+      new Array<CellState>(this.currentLevel.size).fill(CellState.EMPTY)
+    );
+    this.history = [];
+    this.conflicts = [];
+    this.status = 'PLAYING';
+    this.timeRemaining = this.currentLevel.initialTime || 209;
+    this.remainingPonies = this.currentLevel.targetCount || this.currentLevel.size;
+
+    this.startTimer();
+    this.saveStorage();
+    this.notify();
+  }
+
+  public startTimer() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval = window.setInterval(() => {
+      if (this.status !== 'PLAYING') return;
+      if (this.timeRemaining > 0) {
+        this.timeRemaining--;
+        this.notify();
+      } else {
+        this.handleTimeOut();
+      }
+    }, 1000);
+  }
+
+  public stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  private handleTimeOut() {
+    this.status = 'LOST';
+    this.stopTimer();
+    soundManager.playConflict();
+    this.notify();
+  }
+
+  /**
+   * 记录一步历史用于撤销
+   */
+  private pushHistory() {
+    const copy = this.grid.map(row => [...row]);
+    this.history.push(copy);
+    if (this.history.length > 50) this.history.shift();
+  }
+
+  /**
+   * 循环切换格子状态：EMPTY -> CROSS -> ANIMAL -> EMPTY (由玩家纯手动控制)
+   */
+  public cycleCell(r: number, c: number) {
+    if (this.status !== 'PLAYING') return;
+
+    this.pushHistory();
+    const cur = this.grid[r][c];
+    let next: CellState = CellState.EMPTY;
+
+    if (cur === CellState.EMPTY) {
+      next = CellState.CROSS;
+      soundManager.playCross();
+    } else if (cur === CellState.CROSS) {
+      next = CellState.ANIMAL;
+      soundManager.playAnimal();
+    } else {
+      next = CellState.EMPTY;
+      soundManager.playTap();
+    }
+
+    this.grid[r][c] = next;
+    this.evaluateBoard();
+  }
+
+  /**
+   * 直接设置格子状态（用于玩家单指拖拽连划 ❌）
+   */
+  public autoFillCross(r: number, c: number) {
+    if (this.status !== 'PLAYING') return;
+    let changed = false;
+
+    // 行和列
+    for (let i = 0; i < this.currentLevel.size; i++) {
+      if (i !== c && this.grid[r][i] === CellState.EMPTY) {
+        this.grid[r][i] = CellState.CROSS;
+        changed = true;
+      }
+      if (i !== r && this.grid[i][c] === CellState.EMPTY) {
+        this.grid[i][c] = CellState.CROSS;
+        changed = true;
+      }
+    }
+
+    // 周围 8 个格子
+    const dirs = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1],           [0, 1],
+      [1, -1],  [1, 0],  [1, 1]
+    ];
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr;
+      const nc = c + dc;
+      if (nr >= 0 && nr < this.currentLevel.size && nc >= 0 && nc < this.currentLevel.size) {
+        if (this.grid[nr][nc] === CellState.EMPTY) {
+          this.grid[nr][nc] = CellState.CROSS;
+          changed = true;
+        }
+      }
+    }
+
+    // 同一区域 (颜色)
+    const regionId = this.currentLevel.regions[r][c];
+    for (let i = 0; i < this.currentLevel.size; i++) {
+      for (let j = 0; j < this.currentLevel.size; j++) {
+        if (this.currentLevel.regions[i][j] === regionId && this.grid[i][j] === CellState.EMPTY) {
+          this.grid[i][j] = CellState.CROSS;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      this.evaluateBoard();
+      this.notify();
+    }
+  }
+
+  public setCellState(r: number, c: number, state: CellState, recordHistory: boolean = true) {
+    if (this.status !== 'PLAYING') return;
+    if (this.grid[r][c] === state) return;
+
+    if (recordHistory) this.pushHistory();
+    this.grid[r][c] = state;
+
+    if (state === CellState.CROSS) {
+      soundManager.playCross();
+    } else if (state === CellState.ANIMAL) {
+      soundManager.playAnimal();
+    }
+
+    this.evaluateBoard();
+  }
+
+  /**
+   * 撤销上一步
+   */
+  public undo() {
+    if (this.status !== 'PLAYING' || this.history.length === 0) return;
+    const prev = this.history.pop();
+    if (prev) {
+      this.grid = prev;
+      soundManager.playButton();
+      this.evaluateBoard();
+    }
+  }
+
+  /**
+   * 清除棋盘上所有标记
+   */
+  public clearBoard() {
+    if (this.status !== 'PLAYING') return;
+    this.pushHistory();
+    const size = this.currentLevel.size;
+    this.grid = Array.from({ length: size }, () => new Array<CellState>(size).fill(CellState.EMPTY));
+    soundManager.playButton();
+    this.evaluateBoard();
+  }
+
+  /**
+   * 道具：使用放大镜/探照 (自动排查填充 X)
+   */
+  public useDetectorProp(): boolean {
+    if (this.status !== 'PLAYING' || this.user.props.detector <= 0) return false;
+    const exclusions = QueensSolver.getDetectorExclusions(this.grid, this.currentLevel.regions);
+    if (exclusions.length === 0) return false;
+
+    this.pushHistory();
+    this.user.props.detector--;
+    soundManager.playHint();
+
+    exclusions.forEach(({ row, col }) => {
+      this.grid[row][col] = CellState.CROSS;
+    });
+
+    this.evaluateBoard();
+    this.saveStorage();
+    return true;
+  }
+
+  /**
+   * 道具：使用灯泡提示 (直接放置 1 匹正解小马)
+   */
+  public useHintProp(): boolean {
+    if (this.status !== 'PLAYING' || this.user.props.hint <= 0) return false;
+    const target = QueensSolver.getSmartHint(this.grid, this.currentLevel.regions);
+    if (!target) return false;
+
+    this.pushHistory();
+    this.user.props.hint--;
+    soundManager.playHint();
+
+    this.grid[target.row][target.col] = CellState.ANIMAL;
+    this.evaluateBoard();
+    this.saveStorage();
+    return true;
+  }
+
+  public toggleColorblind() {
+    this.user.settings.colorblind = !this.user.settings.colorblind;
+    soundManager.playButton();
+    this.saveStorage();
+    this.notify();
+  }
+
+  public toggleCoordinates() {
+    this.user.settings.coordinates = !this.user.settings.coordinates;
+    soundManager.playButton();
+    this.saveStorage();
+    this.notify();
+  }
+
+  public toggleSound() {
+    this.user.settings.sound = !this.user.settings.sound;
+    soundManager.setSoundEnabled(this.user.settings.sound);
+    soundManager.playButton();
+    this.saveStorage();
+    this.notify();
+  }
+
+  /**
+   * 评估棋盘状态：计算冲突与胜利判定
+   */
+  private evaluateBoard() {
+    const size = this.currentLevel.size;
+    this.conflicts = QueensSolver.findConflicts(this.grid, this.currentLevel.regions);
+
+    let placedCount = 0;
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (this.grid[r][c] === CellState.ANIMAL) {
+          placedCount++;
+        }
+      }
+    }
+
+    this.remainingPonies = Math.max(0, size - placedCount);
+
+    // 冲突震慑音效
+    if (this.conflicts.length > 0) {
+      soundManager.playConflict();
+    }
+
+    // 胜利条件：恰好放置了 N 匹小马，且无任何冲突
+    if (placedCount === size && this.conflicts.length === 0) {
+      this.handleWin();
+    }
+
+    this.notify();
+  }
+
+  private handleWin() {
+    this.status = 'WON';
+    this.stopTimer();
+    this.user.coins += 10;
+    this.user.streak += 1;
+    soundManager.playWin();
+    this.saveStorage();
+    this.notify();
+  }
+
+  public nextLevel() {
+    this.loadLevel(this.user.level + 1);
+  }
+
+  public retryLevel() {
+    this.loadLevel(this.user.level);
+  }
+
+  /**
+   * 重置游戏进度回到第 1 关
+   */
+  public resetProgress() {
+    this.user.level = 1;
+    this.user.coins = 0;
+    this.user.streak = 0;
+    this.user.props = { detector: 3, hint: 3 };
+    this.saveStorage();
+    this.loadLevel(1);
+  }
+
+  private saveStorage() {
+    try {
+      localStorage.setItem('NIULAI_SUDOKU_USER_V2', JSON.stringify(this.user));
+    } catch {
+      // 忽略无法写入 LocalStorage 的情况
+    }
+  }
+
+  private loadStorage() {
+    try {
+      // 使用全新 V2 存储键，彻底清除旧版测试残留的 24 关脏数据
+      const data = localStorage.getItem('NIULAI_SUDOKU_USER_V2');
+      if (data) {
+        const parsed = JSON.parse(data);
+        this.user = { ...this.user, ...parsed };
+        soundManager.setSoundEnabled(this.user.settings.sound);
+        soundManager.setHapticsEnabled(this.user.settings.haptics);
+      } else {
+        // 新用户默认从第 1 关开始
+        this.user.level = 1;
+      }
+    } catch {
+      this.user.level = 1;
+    }
+  }
+}
+
+export const gameState = GameStateManager.getInstance();
