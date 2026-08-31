@@ -272,9 +272,14 @@ body {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  touch-action: manipulation;
+  touch-action: none !important;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.08s ease;
+}
+
+.board-cell * {
+  pointer-events: none;
 }
 
 .board-cell:active {
@@ -656,12 +661,7 @@ body {
 }
 .modal-primary-btn:active { transform: scale(0.96); }
 
-.lose-actions-column {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 18px;
-}
+.lose-actions-column { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
 
 .modal-secondary-btn {
   background: #FFF3CD;
@@ -677,115 +677,34 @@ body {
 }
 .modal-secondary-btn:active { transform: scale(0.96); }
 
-.modal-text-btn {
-  background: none;
-  border: none;
-  color: #7F8C8D;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px;
-  cursor: pointer;
-}
+.modal-text-btn { background: none; border: none; color: #7F8C8D; font-size: 13px; font-weight: 600; padding: 6px; cursor: pointer; }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-close-x { background: none; border: none; font-size: 15px; cursor: pointer; color: var(--primary-color); }
 
-.modal-close-x {
-  background: none;
-  border: none;
-  font-size: 15px;
-  cursor: pointer;
-  color: var(--primary-color);
-}
+.settings-list { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-dark); }
 
-.settings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-align: left;
-}
+.quick-level-select { margin-top: 16px; text-align: left; border-top: 1px solid #E5E5EA; padding-top: 12px; }
+.select-label { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 8px; }
+.level-btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
-.setting-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 15px;
-  color: var(--text-dark);
-}
+.lvl-jump-btn { background: var(--bg-color); border: none; border-radius: 8px; padding: 8px 0; font-size: 13px; color: var(--text-dark); cursor: pointer; }
+.lvl-jump-btn.current { background: var(--primary-color); color: #FFF; }
+.lvl-jump-btn.locked { opacity: 0.45; cursor: not-allowed; background: #E2EDF3; color: #7F8C8D; }
 
-.quick-level-select {
-  margin-top: 20px;
-  text-align: left;
-  border-top: 1px solid #E5E5EA;
-  padding-top: 14px;
-}
+.custom-jump-row { display: flex; gap: 8px; margin-top: 10px; }
+.custom-jump-input { flex: 1; border: 1px solid #D5DBDB; background: var(--bg-color); border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; }
+.custom-jump-btn { background: var(--primary-color); color: #FFF; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
 
-.select-label {
-  font-size: 13px;
-  color: var(--text-gray);
-  margin-bottom: 10px;
-}
+/* ================= 跨设备存档同步与攻略 ================= */
+.save-sync-section { margin-top: 16px; text-align: left; border-top: 1px solid #E5E5EA; padding-top: 12px; }
+.save-code-badge { background: #F4F8FA; border: 1.5px dashed #A6ACAF; border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.15s; }
+.save-code-badge:active { background: #EBF5FB; }
+.save-code-str { font-family: monospace; font-size: 11px; color: #2C3E50; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+.save-copy-tag { font-size: 11px; font-weight: 800; color: var(--primary-color); }
+.welcome-import-box { margin-top: 10px; }
 
-.level-btn-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.lvl-jump-btn {
-  background: var(--bg-color);
-  border: none;
-  border-radius: 8px;
-  padding: 8px 0;
-  font-size: 13px;
-  color: var(--text-dark);
-  cursor: pointer;
-}
-
-.lvl-jump-btn.current {
-  background: var(--primary-color);
-  color: #FFF;
-}
-
-.custom-jump-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.custom-jump-input {
-  flex: 1;
-  border: none;
-  background: var(--bg-color);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 14px;
-  outline: none;
-}
-
-.custom-jump-btn {
-  background: var(--primary-color);
-  color: #FFF;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.lvl-jump-btn.locked {
-  opacity: 0.45;
-  cursor: not-allowed;
-  background: #E2EDF3;
-  color: #7F8C8D;
-}
-
-/* ================= 玩法攻略与跨端同步弹窗 ================= */
 .guide-card { max-width: 360px; max-height: 85vh; display: flex; flex-direction: column; }
 .guide-scroll-body { overflow-y: auto; text-align: left; padding-right: 4px; display: flex; flex-direction: column; gap: 10px; }
 .guide-sec-title { font-size: 13px; font-weight: 800; color: #2C3E50; margin-bottom: 4px; }
@@ -793,5 +712,3 @@ body {
 .guide-tip-card { background: #F4F8FA; border: 1px solid #DCE9F0; border-radius: 10px; padding: 6px 10px; margin-bottom: 6px; }
 .tip-title { font-size: 12px; font-weight: 800; color: #2980B9; margin-bottom: 2px; }
 .tip-desc { font-size: 11px; color: #555; line-height: 1.4; }
-.save-sync-section { margin-top: 16px; text-align: left; border-top: 1px solid #E5E5EA; padding-top: 12px; }
-.welcome-import-box { margin-top: 10px; }

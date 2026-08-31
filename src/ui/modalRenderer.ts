@@ -169,12 +169,13 @@ export class ModalRenderer {
 
         <!-- 跨设备存档同步 -->
         <div class="save-sync-section">
-          <div class="select-label">☁️ 跨设备存档同步：</div>
-          <button id="btn-copy-save" class="modal-primary-btn btn-small" style="margin-bottom: 8px;">
-            📋 一键复制我的存档码
-          </button>
-          <div class="custom-jump-row">
-            <input type="text" id="input-import-save" class="custom-jump-input" placeholder="粘贴其他设备存档码 (NIU-...)" />
+          <div class="select-label">☁️ 我的当前存档 ID (点击一键复制)：</div>
+          <div id="box-save-code" class="save-code-badge" title="点击一键复制存档ID">
+            <span class="save-code-str">${gameState.generateSaveCode()}</span>
+            <span class="save-copy-tag">📋 复制</span>
+          </div>
+          <div class="custom-jump-row" style="margin-top: 10px;">
+            <input type="text" id="input-import-save" class="custom-jump-input" placeholder="粘贴其他设备存档 ID (NIU-...)" />
             <button id="btn-import-save" class="custom-jump-btn">导入</button>
           </div>
         </div>
@@ -191,17 +192,22 @@ export class ModalRenderer {
       this.closeModal();
     });
 
-    this.overlayEl.querySelector('#btn-copy-save')?.addEventListener('click', () => {
+    const copySaveCode = () => {
       const code = gameState.generateSaveCode();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(code).then(() => {
-          HudRenderer.showToast('✅ 存档码已复制！可在其他设备粘贴导入');
+          HudRenderer.showToast('✅ 存档 ID 已复制到剪贴板！可发至其他设备导入');
         }).catch(() => {
-          prompt('请长按复制你的专属存档码：', code);
+          prompt('请长按复制你的专属存档 ID：', code);
         });
       } else {
-        prompt('请长按复制你的专属存档码：', code);
+        prompt('请长按复制你的专属存档 ID：', code);
       }
+    };
+
+    this.overlayEl.querySelector('#box-save-code')?.addEventListener('click', () => {
+      soundManager.playButton();
+      copySaveCode();
     });
 
     this.overlayEl.querySelector('#btn-import-save')?.addEventListener('click', () => {

@@ -46,15 +46,37 @@ export class TouchHandler {
   }
 
   private getCellFromPoint(clientX: number, clientY: number): { row: number; col: number } | null {
+    // 1. DOM 树向上回溯快速查询
     const el = document.elementFromPoint(clientX, clientY);
-    if (!el) return null;
-    const cellEl = el.closest('.board-cell') as HTMLElement | null;
-    if (!cellEl || cellEl.dataset.row === undefined || cellEl.dataset.col === undefined) return null;
+    if (el) {
+      const cellEl = el.closest('.board-cell') as HTMLElement | null;
+      if (cellEl && cellEl.dataset.row !== undefined && cellEl.dataset.col !== undefined) {
+        return {
+          row: parseInt(cellEl.dataset.row, 10),
+          col: parseInt(cellEl.dataset.col, 10)
+        };
+      }
+    }
 
-    return {
-      row: parseInt(cellEl.dataset.row, 10),
-      col: parseInt(cellEl.dataset.col, 10)
-    };
+    // 2. 物理几何坐标双重兜底（即使高速滑过格子间隙或 SVG 遮罩层也能 100% 捕获）
+    const gridEl = this.container.querySelector('.board-grid') as HTMLElement;
+    if (!gridEl) return null;
+    const rect = gridEl.getBoundingClientRect();
+    if (
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom
+    ) {
+      const size = gameState.currentLevel.size;
+      const col = Math.floor(((clientX - rect.left) / rect.width) * size);
+      const row = Math.floor(((clientY - rect.top) / rect.height) * size);
+      if (row >= 0 && row < size && col >= 0 && col < size) {
+        return { row, col };
+      }
+    }
+
+    return null;
   }
 
   private startInteraction(clientX: number, clientY: number) {
