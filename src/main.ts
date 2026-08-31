@@ -49,6 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
     HudRenderer.showToast(msg);
   };
 
+  // 绑定增加提示确认弹窗回调 (由用户完全掌控)
+  gameState.onNeedMoreHint = (remainingQuota: number, maxQuota: number) => {
+    modalRenderer.showAddHintModal(remainingQuota, maxQuota, () => {
+      gameState.addHintAndUse();
+    });
+  };
+
   // 2. 用户首次任意触屏操作时解锁 iOS Web Audio 上下文
   const unlockAudio = () => {
     soundManager.unlock();

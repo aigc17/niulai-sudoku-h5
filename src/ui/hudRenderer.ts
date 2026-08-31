@@ -42,6 +42,12 @@ export class HudRenderer {
     this.renderBottomToolbar();
   }
 
+  private formatTime(time: number): string {
+    const m = Math.floor(Math.max(0, time) / 60);
+    const s = Math.max(0, time) % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
   /**
    * 渲染顶部资源、关卡、攻略与倒计时状态栏
    */
@@ -51,57 +57,48 @@ export class HudRenderer {
     const remainingPonies = gameState.remainingPonies;
 
     this.headerEl.innerHTML = `
-      <div class="hud-top-row">
-        <div class="hud-left-group">
+      <div class="hud-nav hud-top-row">
+        <div class="hud-nav-side hud-nav-left hud-left-group">
           <button id="btn-settings" class="game-icon-btn settings-btn" aria-label="设置" title="游戏设置">
-            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0 1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
           </button>
           <button id="btn-guide" class="game-icon-btn guide-btn" aria-label="攻略" title="玩法攻略与破局技巧">
-            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
           </button>
-          <div class="resource-badge coin-badge">
-            <span class="coin-icon">🪙</span>
-            <span class="badge-val">${user.coins}</span>
-          </div>
         </div>
 
-        <div class="hud-center-group">
-          <button id="btn-level-title" class="level-title-btn" title="点击选关">
-            <span class="level-title-text">第${user.level}关</span>
-            <span class="level-arrow">▾</span>
-          </button>
-        </div>
+        <button id="btn-level-title" class="level-title-btn" title="点击选关">
+          <span class="level-title-text">第 ${user.level} 关</span>
+          <span class="level-arrow">▾</span>
+        </button>
 
-        <div class="hud-right-group">
+        <div class="hud-nav-side hud-nav-right hud-right-group">
           <div class="streak-badge">
             <span class="trophy-icon">🏆</span>
             <span class="streak-text">${user.streak}</span>
           </div>
-          <button id="btn-reset-l1" class="game-icon-btn reset-btn" title="重置本关">
-            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-              <path d="M3 3v5h5"></path>
-            </svg>
-          </button>
         </div>
       </div>
 
-      <div class="hud-status-row">
-        <div class="status-pill target-pill">
+      <div class="hud-metrics hud-status-row">
+        <div class="metric-chip coin-badge">
+          <span class="metric-ico coin-icon">🪙</span>
+          <span class="badge-val">${user.coins}</span>
+        </div>
+        <div class="metric-chip status-pill target-pill">
           <img src="/bull.png" class="pill-bull-icon" alt="牛头" />
-          <span class="pill-label">剩余:</span>
+          <span class="pill-label">剩余</span>
           <span class="pill-num highlight-red">${remainingPonies}</span>
         </div>
-        <div class="status-pill timer-pill">
-          <span class="pill-icon">⏱️</span>
-          <span class="pill-label">时间:</span>
-          <span class="pill-num highlight-red">${time}</span>
+        <div class="metric-chip status-pill timer-pill">
+          <span class="pill-label">时间</span>
+          <span class="pill-num highlight-red">${this.formatTime(time)}</span>
         </div>
       </div>
     `;
@@ -120,7 +117,6 @@ export class HudRenderer {
     bindHeaderBtn('#btn-settings', () => this.onOpenSettings());
     bindHeaderBtn('#btn-guide', () => this.onOpenGuide());
     bindHeaderBtn('#btn-level-title', () => this.onOpenSettings());
-    bindHeaderBtn('#btn-reset-l1', () => gameState.clearBoard());
   }
 
   /**
@@ -129,7 +125,7 @@ export class HudRenderer {
   public updateTimer(time: number) {
     const timerNumEl = this.headerEl.querySelector('.timer-pill .pill-num');
     if (timerNumEl) {
-      timerNumEl.textContent = time.toString();
+      timerNumEl.textContent = this.formatTime(time);
     }
   }
 
@@ -156,15 +152,17 @@ export class HudRenderer {
   }
 
   /**
-   * 渲染底部道具与控制栏 (清除、放大镜探照、灯泡提示、坐标)
+   * 渲染底部道具与控制栏 (清除、灯泡提示、坐标)
    */
   public renderBottomToolbar() {
     const user = gameState.user;
     const hasCoordinates = user.settings.coordinates;
+    const maxQuota = gameState.currentLevel ? (gameState.currentLevel.targetCount || gameState.currentLevel.size) : 7;
+    const isLevelMaxReached = gameState.usedHintsThisLevel >= maxQuota;
 
     this.toolbarEl.innerHTML = `
       <div class="toolbar-wrapper">
-        <!-- 清除/重置 -->
+        <!-- 清除全部标记 -->
         <button id="btn-clear" class="tool-btn action-clear" title="清空全部标记">
           <div class="tool-icon-wrapper">
             <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -177,24 +175,15 @@ export class HudRenderer {
           <span class="tool-label">清除</span>
         </button>
 
-        <!-- 探照/牛头探照道具 -->
-        <button id="btn-detector" class="tool-btn prop-btn ${user.props.detector <= 0 ? 'disabled' : ''}" title="探照：随机排除一个不可能的格子">
-          <div class="prop-card-3d">
-            <img src="/bull.png" class="prop-bull-icon" alt="探照" />
-            <div class="prop-badge-pill">${user.props.detector}</div>
-          </div>
-          <span class="tool-label">探照</span>
-        </button>
-
-        <!-- 提示/神奇灯泡道具 -->
-        <button id="btn-hint" class="tool-btn prop-btn ${user.props.hint <= 0 ? 'disabled' : ''}" title="提示：直接找出一个小牛的正确位置">
+        <!-- 提示/神奇灯泡道具 (每关上限为当前关牛只数，可自如加点) -->
+        <button id="btn-hint" class="tool-btn prop-btn ${isLevelMaxReached ? 'disabled' : ''}" title="提示：找出一只小牛的正确位置">
           <div class="prop-card-3d">
             <svg class="prop-lightbulb-svg" viewBox="0 0 24 24" fill="none" stroke="#F39C12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 18h6"></path>
               <path d="M10 22h4"></path>
               <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
             </svg>
-            <div class="prop-badge-pill badge-green">${user.props.hint > 0 ? user.props.hint : '+'}</div>
+            <div class="prop-badge-pill ${user.props.hint > 0 ? 'badge-green' : 'badge-orange'}">${isLevelMaxReached ? '0' : (user.props.hint > 0 ? user.props.hint : '+')}</div>
           </div>
           <span class="tool-label">提示</span>
         </button>
@@ -223,7 +212,6 @@ export class HudRenderer {
     };
 
     bindBtn('#btn-clear', () => gameState.clearBoard());
-    bindBtn('#btn-detector', () => gameState.useDetectorProp());
     bindBtn('#btn-hint', () => gameState.useHintProp());
     bindBtn('#btn-coords', () => gameState.toggleCoordinates());
   }

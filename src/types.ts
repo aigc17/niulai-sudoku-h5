@@ -58,7 +58,6 @@ export interface UserProfile {
   lives: number;
   streak: number;
   props: {
-    detector: number; // 放大镜/探照
     hint: number;     // 灯泡提示
   };
   settings: {

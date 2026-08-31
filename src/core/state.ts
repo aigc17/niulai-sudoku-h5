@@ -30,7 +30,6 @@ export class GameStateManager {
     lives: 2,
     streak: 6,
     props: {
-      detector: 1,
       hint: 1
     },
     settings: {
@@ -47,6 +46,7 @@ export class GameStateManager {
   public status: GameStatus = 'PLAYING';
   public timeRemaining: number = 209;
   public remainingPonies: number = 7;
+  public usedHintsThisLevel: number = 0;
 
   public lastPopCell: { row: number; col: number } | null = null;
   public lastErrorCell: { row: number; col: number } | null = null;
@@ -80,6 +80,7 @@ export class GameStateManager {
 
   public onTimerTick: ((time: number) => void) | null = null;
   public onErrorMessage: ((msg: string) => void) | null = null;
+  public onNeedMoreHint: ((remainingQuota: number, maxQuota: number) => void) | null = null;
 
   public loadLevel(levelId: number) {
     // 关卡锁判定：用户只能选择 <= maxUnlockedLevel 的已通关或当前关卡进行挑战
@@ -101,6 +102,9 @@ export class GameStateManager {
     this.status = 'PLAYING';
     this.timeRemaining = this.currentLevel.initialTime || 209;
     this.remainingPonies = this.currentLevel.targetCount || this.currentLevel.size;
+    this.usedHintsThisLevel = 0;
+    // 每一关都贴心保障用户手上有可用提示
+    this.user.props.hint = Math.max(this.user.props.hint, 1);
 
     this.startTimer();
     this.saveStorage();
@@ -354,42 +358,68 @@ export class GameStateManager {
   }
 
   /**
-   * 道具：使用放大镜/探照 (自动排查填充 X)
+   * 道具：使用灯泡提示 (直接放置 1 匹正解牛牛，每关上限为当前关牛牛总只数)
    */
-  public useDetectorProp(): boolean {
-    if (this.status !== 'PLAYING' || this.user.props.detector <= 0) return false;
-    const exclusions = QueensSolver.getDetectorExclusions(this.grid, this.currentLevel.regions);
-    if (exclusions.length === 0) return false;
+  public useHintProp(): boolean {
+    if (this.status !== 'PLAYING') return false;
+
+    const maxHints = this.currentLevel.targetCount || this.currentLevel.size;
+    if (this.usedHintsThisLevel >= maxHints) {
+      if (this.onErrorMessage) {
+        this.onErrorMessage(`⚠️ 本关提示已达上限（最多 ${maxHints} 次），挑战独立思考破局吧！`);
+      }
+      return false;
+    }
+
+    if (this.user.props.hint <= 0) {
+      const remainingQuota = maxHints - this.usedHintsThisLevel;
+      if (this.onNeedMoreHint) {
+        this.onNeedMoreHint(remainingQuota, maxHints);
+      }
+      return false;
+    }
+
+    const target = QueensSolver.getSmartHint(this.grid, this.currentLevel.regions);
+    if (!target) {
+      if (this.onErrorMessage) {
+        this.onErrorMessage('当前盘面已有冲突或已无法推导，请先调整已有牛牛或清除部分标记');
+      }
+      return false;
+    }
 
     this.pushHistory();
-    this.user.props.detector--;
+    this.user.props.hint--;
+    this.usedHintsThisLevel++;
     soundManager.playHint();
 
-    exclusions.forEach(({ row, col }) => {
-      this.grid[row][col] = CellState.CROSS;
-    });
-
+    this.grid[target.row][target.col] = CellState.ANIMAL;
+    this.lastPopCell = { row: target.row, col: target.col };
     this.evaluateBoard();
     this.saveStorage();
+    this.notify();
+
+    if (this.onErrorMessage) {
+      this.onErrorMessage(`💡 提示牛头已就位！(本关已用 ${this.usedHintsThisLevel}/${maxHints} 次)`);
+    }
     return true;
   }
 
   /**
-   * 道具：使用灯泡提示 (直接放置 1 匹正解小马)
+   * 增加提示机会并在可能时立即落子
    */
-  public useHintProp(): boolean {
-    if (this.status !== 'PLAYING' || this.user.props.hint <= 0) return false;
-    const target = QueensSolver.getSmartHint(this.grid, this.currentLevel.regions);
-    if (!target) return false;
-
-    this.pushHistory();
-    this.user.props.hint--;
-    soundManager.playHint();
-
-    this.grid[target.row][target.col] = CellState.ANIMAL;
-    this.evaluateBoard();
+  public addHintAndUse() {
+    this.user.props.hint++;
     this.saveStorage();
-    return true;
+    this.useHintProp();
+  }
+
+  /**
+   * 增加提示机会存储
+   */
+  public addHintCount() {
+    this.user.props.hint++;
+    this.saveStorage();
+    this.notify();
   }
 
   public toggleCoordinates() {
@@ -496,7 +526,7 @@ export class GameStateManager {
     this.user.maxUnlockedLevel = 1;
     this.user.coins = 0;
     this.user.streak = 0;
-    this.user.props = { detector: 3, hint: 3 };
+    this.user.props = { hint: 3 };
     this.saveStorage();
     this.loadLevel(1);
   }
@@ -541,7 +571,6 @@ export class GameStateManager {
         this.user.streak = Math.max(0, p.s || 0);
         if (p.p) {
           this.user.props = {
-            detector: Math.max(0, p.p.detector ?? p.p.d ?? 1),
             hint: Math.max(0, p.p.hint ?? p.p.h ?? 1)
           };
         }

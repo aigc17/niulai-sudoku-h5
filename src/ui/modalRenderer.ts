@@ -122,6 +122,47 @@ export class ModalRenderer {
   }
 
   /**
+   * 增加提示确认弹窗 (掌握在用户手中，本关限额之内自由添加)
+   */
+  public showAddHintModal(remainingQuota: number, maxQuota: number, onConfirm: () => void) {
+    this.overlayEl.classList.remove('hidden');
+    this.overlayEl.innerHTML = `
+      <div class="modal-card add-hint-card animate-pop">
+        <div class="lose-icon">💡</div>
+        <h2 class="modal-title">获取提示</h2>
+        <p class="modal-subtitle" style="margin-top: 6px;">是否增加 1 次提示机会？</p>
+        
+        <div class="rewards-box" style="margin: 14px 0; padding: 10px;">
+          <div class="reward-item" style="font-size: 13px; color: #555;">
+            <span>本关剩余可用：</span>
+            <b style="color: #27AE60; font-size: 15px;">${remainingQuota} 次</b>
+            <span style="color: #888; font-size: 12px;">(上限 ${maxQuota} 次)</span>
+          </div>
+        </div>
+
+        <div class="lose-actions-column" style="margin-top: 12px;">
+          <button id="btn-confirm-add-hint" class="modal-primary-btn" style="background: #27AE60;">
+            ✨ 立即增加并落子 (+1 提示)
+          </button>
+          <button id="btn-cancel-add-hint" class="modal-text-btn">
+            稍后再说
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.bindModalBtn('#btn-confirm-add-hint', () => {
+      soundManager.playButton();
+      this.closeModal();
+      onConfirm();
+    });
+
+    this.bindModalBtn('#btn-cancel-add-hint', () => {
+      this.closeModal();
+    });
+  }
+
+  /**
    * 设置与快速选关弹窗
    */
   public showSettingsModal() {
