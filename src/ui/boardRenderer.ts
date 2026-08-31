@@ -92,8 +92,14 @@ export class BoardRenderer {
         // 计算当前格子与周围区域的边界连通性
         this.applyRegionBorders(cell, r, c, level.regions, size);
 
+        const isError = gameState.lastErrorCell && gameState.lastErrorCell.row === r && gameState.lastErrorCell.col === c;
+        const isJustPopped = gameState.lastPopCell && gameState.lastPopCell.row === r && gameState.lastPopCell.col === c;
+
         if (isConflict) {
           cell.classList.add('cell-conflict');
+        }
+        if (isError) {
+          cell.classList.add('cell-error-shake');
         }
 
         // 色盲模式几何符号水印
@@ -104,19 +110,20 @@ export class BoardRenderer {
           cell.appendChild(symEl);
         }
 
-        // 格子内容：空 / ❌ (可爱纯白圆角叉) / 🐮 (红色牛头贴纸)
-        if (state === CellState.CROSS) {
+        // 格子内容：空 / ❌ (可爱纯白圆角叉 / 错误红叉) / 🐮 (红色牛头贴纸带弹跳放大回弹)
+        if (isError || state === CellState.CROSS) {
           const crossEl = document.createElement('div');
-          crossEl.className = 'cell-cross pop-in-cross';
+          const isRedCross = isError;
+          crossEl.className = `cell-cross pop-in-cross ${isRedCross ? 'error-cross' : ''}`;
           crossEl.innerHTML = `
             <svg class="cute-cross-svg" viewBox="0 0 48 48" fill="none">
-              <path d="M14 14 L34 34 M34 14 L14 34" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 14 L34 34 M34 14 L14 34" stroke="${isRedCross ? '#E74C3C' : '#FFFFFF'}" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           `;
           cell.appendChild(crossEl);
         } else if (state === CellState.ANIMAL) {
           const animalEl = document.createElement('div');
-          animalEl.className = 'cell-animal bounce-in';
+          animalEl.className = `cell-animal ${isJustPopped ? 'bull-pop-spring' : ''}`;
           animalEl.innerHTML = `<img src="/bull.png" class="bull-sticker-img" alt="牛头" />`;
           cell.appendChild(animalEl);
         }

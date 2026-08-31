@@ -48,6 +48,9 @@ export class GameStateManager {
   public timeRemaining: number = 209;
   public remainingPonies: number = 7;
 
+  public lastPopCell: { row: number; col: number } | null = null;
+  public lastErrorCell: { row: number; col: number } | null = null;
+
   private history: CellState[][][] = [];
   private timerInterval: number | null = null;
   private listeners: (() => void)[] = [];
@@ -130,6 +133,7 @@ export class GameStateManager {
 
   /**
    * 循环切换格子状态：EMPTY -> CROSS -> ANIMAL -> EMPTY (由玩家纯手动控制)
+   * 智能防呆机制：若放置牛头会造成冲突，拦截放置并立即以红色震颤叉叉反馈，绝不在界面留下多余牛头！
    */
   public cycleCell(r: number, c: number) {
     if (this.status !== 'PLAYING') return;
@@ -140,17 +144,90 @@ export class GameStateManager {
 
     if (cur === CellState.EMPTY) {
       next = CellState.CROSS;
+      this.lastPopCell = null;
+      this.lastErrorCell = null;
       soundManager.playCross();
+      this.grid[r][c] = next;
+      this.evaluateBoard();
     } else if (cur === CellState.CROSS) {
-      next = CellState.ANIMAL;
-      soundManager.playAnimal();
+      // 玩家希望落子为牛头：先校验是否与盘面上已有牛头发生冲突
+      const conflictReason = this.checkPlacementConflict(r, c);
+      if (conflictReason) {
+        // 发现冲突：不生成牛头，将该格置为红色错误叉叉并触发抖动反馈
+        this.lastErrorCell = { row: r, col: c };
+        this.lastPopCell = null;
+        soundManager.playConflict();
+        this.notify();
+        setTimeout(() => {
+          if (this.lastErrorCell && this.lastErrorCell.row === r && this.lastErrorCell.col === c) {
+            this.lastErrorCell = null;
+            this.notify();
+          }
+        }, 800);
+        return;
+      } else {
+        // 合法落子：成功生成牛头并触发弹跳果冻动效
+        next = CellState.ANIMAL;
+        this.lastPopCell = { row: r, col: c };
+        this.lastErrorCell = null;
+        soundManager.playAnimal();
+        this.grid[r][c] = next;
+        this.evaluateBoard();
+      }
     } else {
       next = CellState.EMPTY;
+      this.lastPopCell = null;
+      this.lastErrorCell = null;
       soundManager.playTap();
+      this.grid[r][c] = next;
+      this.evaluateBoard();
+    }
+  }
+
+  /**
+   * 检查在 (r, c) 放置牛头是否会破坏当前公理约束
+   */
+  private checkPlacementConflict(r: number, c: number): string | null {
+    const size = this.currentLevel.size;
+    const targetRegion = this.currentLevel.regions[r][c];
+
+    // 1. 同行检查
+    for (let j = 0; j < size; j++) {
+      if (j !== c && this.grid[r][j] === CellState.ANIMAL) {
+        return `第 ${r + 1} 行已有牛头`;
+      }
     }
 
-    this.grid[r][c] = next;
-    this.evaluateBoard();
+    // 2. 同列检查
+    for (let i = 0; i < size; i++) {
+      if (i !== r && this.grid[i][c] === CellState.ANIMAL) {
+        return `第 ${c + 1} 列已有牛头`;
+      }
+    }
+
+    // 3. 同一颜色区域检查
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        if ((i !== r || j !== c) && this.currentLevel.regions[i][j] === targetRegion && this.grid[i][j] === CellState.ANIMAL) {
+          return `该颜色区域已有牛头`;
+        }
+      }
+    }
+
+    // 4. 周围 8 邻域检查
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+          if (this.grid[nr][nc] === CellState.ANIMAL) {
+            return `牛头周围不能相邻`;
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
