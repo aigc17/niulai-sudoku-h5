@@ -21,10 +21,9 @@ export class LevelGenerator {
    * 确保第 N 关在任何时间、任何设备上生成的地图 100% 相同且具有严格唯一正解与逻辑破局点
    */
   public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts?: number): LevelData {
-    const isEarlyTutorial = levelId <= 10; // 1~10 关强制生成 100% 独立单格单色突破口
-    const requireAnchor = true;           // 全量关卡标配“破局点生成器”，绝不刁难玩家
-    // 前 350 次种子与旧版完全一致，已生成成功的关卡盘面不变；大棋盘追加尝试以免掉进兜底
-    const attempts = maxAttempts ?? (size >= 10 ? 1500 : size >= 9 ? 900 : 350);
+    const isEarlyTutorial = levelId <= 3; // 仅 1~3 关新手教程保留单格突破口，4关起自然生长均衡色块
+    const requireAnchor = levelId <= 15;  // 前 15 关提供适当狭管引导，高阶关卡全开多维推理
+    const attempts = maxAttempts ?? (size >= 10 ? 1500 : size >= 9 ? 900 : 500);
 
     for (let attempt = 0; attempt < attempts; attempt++) {
       const seed = (levelId * 10007 + attempt * 269) >>> 0;

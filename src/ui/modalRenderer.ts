@@ -197,12 +197,21 @@ export class ModalRenderer {
         <div class="quick-level-select">
           <div class="select-label">已解锁关卡（已通关关卡可随时重玩）：</div>
           <div class="level-btn-grid">
-            ${[1, 2, 3, 4, 5, 10, 24, 50].map(lvl => {
+            ${[
+              { lvl: 1, tag: '4阶' },
+              { lvl: 2, tag: '4阶' },
+              { lvl: 4, tag: '5阶' },
+              { lvl: 7, tag: '5阶' },
+              { lvl: 11, tag: '6阶' },
+              { lvl: 24, tag: '7阶' },
+              { lvl: 61, tag: '8阶' },
+              { lvl: 100, tag: '8阶' }
+            ].map(({ lvl, tag }) => {
               const isUnlocked = lvl <= (user.maxUnlockedLevel || 1);
               const isCurrent = lvl === user.level;
               return `
                 <button class="lvl-jump-btn ${isCurrent ? 'current' : ''} ${isUnlocked ? '' : 'locked'}" data-lvl="${lvl}" ${isUnlocked ? '' : 'disabled'}>
-                  ${isUnlocked ? `第${lvl}关` : `第${lvl}关 🔒`}
+                  ${isUnlocked ? `第${lvl}关(${tag})` : `第${lvl}关 🔒`}
                 </button>
               `;
             }).join('')}
