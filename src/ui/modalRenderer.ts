@@ -33,6 +33,21 @@ export class ModalRenderer {
     }
   }
 
+  private bindModalBtn(selector: string, action: () => void) {
+    const btn = this.overlayEl.querySelector(selector) as HTMLElement | null;
+    if (!btn) return;
+    let last = 0;
+    const handler = (e: Event) => {
+      const now = Date.now();
+      if (now - last < 300) return;
+      last = now;
+      e.stopPropagation();
+      action();
+    };
+    btn.addEventListener('click', handler);
+    btn.addEventListener('touchend', handler);
+  }
+
   /**
    * 通关胜利弹窗 + 满屏五彩礼花纸屑
    */
@@ -63,7 +78,7 @@ export class ModalRenderer {
 
     this.startConfetti();
 
-    this.overlayEl.querySelector('#btn-next-level')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-next-level', () => {
       soundManager.playButton();
       this.closeModal();
       gameState.nextLevel();
@@ -95,17 +110,17 @@ export class ModalRenderer {
       </div>
     `;
 
-    this.overlayEl.querySelector('#btn-revive-time')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-revive-time', () => {
       this.closeModal();
       gameState.reviveWithTime(60);
     });
 
-    this.overlayEl.querySelector('#btn-revive-hint')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-revive-hint', () => {
       this.closeModal();
       gameState.reviveWithHint();
     });
 
-    this.overlayEl.querySelector('#btn-retry-level')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-retry-level', () => {
       soundManager.playButton();
       this.closeModal();
       gameState.retryLevel();
@@ -183,7 +198,7 @@ export class ModalRenderer {
     `;
 
     // 绑定事件
-    this.overlayEl.querySelector('#btn-close-settings')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-close-settings', () => {
       soundManager.playButton();
       this.closeModal();
     });
@@ -201,12 +216,12 @@ export class ModalRenderer {
       }
     };
 
-    this.overlayEl.querySelector('#box-save-code')?.addEventListener('click', () => {
+    this.bindModalBtn('#box-save-code', () => {
       soundManager.playButton();
       copySaveCode();
     });
 
-    this.overlayEl.querySelector('#btn-import-save')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-import-save', () => {
       const input = this.overlayEl.querySelector('#input-import-save') as HTMLInputElement;
       const code = input?.value || '';
       if (!code) {
@@ -222,7 +237,7 @@ export class ModalRenderer {
       }
     });
 
-    this.overlayEl.querySelector('#btn-open-guide-from-settings')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-open-guide-from-settings', () => {
       soundManager.playButton();
       this.showGuideModal();
     });
@@ -245,15 +260,19 @@ export class ModalRenderer {
     });
 
     this.overlayEl.querySelectorAll('.lvl-jump-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const lvl = parseInt((e.currentTarget as HTMLElement).dataset.lvl || '1', 10);
+      const el = btn as HTMLElement;
+      const lvl = parseInt(el.dataset.lvl || '1', 10);
+      const handler = (e: Event) => {
+        e.stopPropagation();
         soundManager.playButton();
         this.closeModal();
         gameState.loadLevel(lvl);
-      });
+      };
+      el.addEventListener('click', handler);
+      el.addEventListener('touchend', handler);
     });
 
-    this.overlayEl.querySelector('#btn-custom-jump')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-custom-jump', () => {
       const input = this.overlayEl.querySelector('#input-custom-lvl') as HTMLInputElement;
       const lvl = parseInt(input?.value || '1', 10);
       const maxUnlocked = user.maxUnlockedLevel || 1;
@@ -296,18 +315,18 @@ export class ModalRenderer {
       </div>
     `;
 
-    this.overlayEl.querySelector('#btn-welcome-new')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-welcome-new', () => {
       soundManager.playButton();
       this.closeModal();
       HudRenderer.showToast('🎉 祝你闯关愉快！随时可在设置中备份存档');
     });
 
-    this.overlayEl.querySelector('#btn-welcome-show-import')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-welcome-show-import', () => {
       const box = this.overlayEl.querySelector('#welcome-import-box');
       box?.classList.toggle('hidden');
     });
 
-    this.overlayEl.querySelector('#btn-welcome-import-submit')?.addEventListener('click', () => {
+    this.bindModalBtn('#btn-welcome-import-submit', () => {
       const input = this.overlayEl.querySelector('#input-welcome-save') as HTMLInputElement;
       const code = input?.value || '';
       if (!code) {
@@ -380,8 +399,8 @@ export class ModalRenderer {
       soundManager.playButton();
       this.closeModal();
     };
-    this.overlayEl.querySelector('#btn-close-guide')?.addEventListener('click', close);
-    this.overlayEl.querySelector('#btn-know-guide')?.addEventListener('click', close);
+    this.bindModalBtn('#btn-close-guide', close);
+    this.bindModalBtn('#btn-know-guide', close);
   }
 
   /**

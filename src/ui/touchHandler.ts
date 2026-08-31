@@ -145,8 +145,10 @@ export class TouchHandler {
 
   private handleTouchStart(e: TouchEvent) {
     if (e.touches.length > 1) return;
-    e.preventDefault();
     const touch = e.touches[0];
+    const cell = this.getCellFromPoint(touch.clientX, touch.clientY);
+    if (!cell) return; // 触点不在棋盘格内，绝不拦截！让顶部 HUD 与其他按钮正常触发！
+    e.preventDefault();
     this.startInteraction(touch.clientX, touch.clientY);
   }
 
@@ -158,6 +160,7 @@ export class TouchHandler {
   }
 
   private handleTouchEnd(e: TouchEvent) {
+    if (!this.isPointerDown) return; // 非棋盘滑动，绝不拦截！保障全屏所有按钮点击即开！
     e.preventDefault();
     this.endInteraction();
   }

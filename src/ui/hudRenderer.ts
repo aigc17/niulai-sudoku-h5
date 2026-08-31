@@ -106,26 +106,27 @@ export class HudRenderer {
       </div>
     `;
 
-    // 绑定设置按钮、攻略按钮与选关按钮
-    this.headerEl.querySelector('#btn-settings')?.addEventListener('click', () => {
-      soundManager.playButton();
-      this.onOpenSettings();
-    });
+    // 绑定设置按钮、攻略按钮与选关按钮（双重保障 click 与 touchend，零延迟即时触发）
+    const bindHeaderBtn = (id: string, action: () => void) => {
+      const btn = this.headerEl.querySelector(id) as HTMLElement | null;
+      if (!btn) return;
+      let lastTrigger = 0;
+      const handler = (e: Event) => {
+        const now = Date.now();
+        if (now - lastTrigger < 300) return;
+        lastTrigger = now;
+        e.stopPropagation();
+        soundManager.playButton();
+        action();
+      };
+      btn.addEventListener('click', handler);
+      btn.addEventListener('touchend', handler);
+    };
 
-    this.headerEl.querySelector('#btn-guide')?.addEventListener('click', () => {
-      soundManager.playButton();
-      this.onOpenGuide();
-    });
-
-    this.headerEl.querySelector('#btn-level-title')?.addEventListener('click', () => {
-      soundManager.playButton();
-      this.onOpenSettings();
-    });
-
-    this.headerEl.querySelector('#btn-reset-l1')?.addEventListener('click', () => {
-      soundManager.playButton();
-      gameState.clearBoard();
-    });
+    bindHeaderBtn('#btn-settings', () => this.onOpenSettings());
+    bindHeaderBtn('#btn-guide', () => this.onOpenGuide());
+    bindHeaderBtn('#btn-level-title', () => this.onOpenSettings());
+    bindHeaderBtn('#btn-reset-l1', () => gameState.clearBoard());
   }
 
   /**
