@@ -21,11 +21,9 @@ export class LevelGenerator {
    * 确保第 N 关在任何时间、任何设备上生成的地图 100% 相同且具有严格唯一正解与逻辑破局点
    */
   public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts?: number): LevelData {
-    const isEarlyTutorial = levelId <= 3; // 仅 1~3 关新手教程保留单格突破口，4关起自然生长均衡色块
-    const requireAnchor = levelId <= 15;  // 前 15 关提供适当狭管引导，高阶关卡全开多维推理
-    const attempts = maxAttempts ?? (size >= 10 ? 1500 : size >= 9 ? 900 : 500);
+    const maxAtt = maxAttempts ?? (size >= 8 ? 2000 : 1000);
 
-    for (let attempt = 0; attempt < attempts; attempt++) {
+    for (let attempt = 0; attempt < maxAtt; attempt++) {
       const seed = (levelId * 10007 + attempt * 269) >>> 0;
       const rng = this.createRNG(seed);
 
@@ -33,10 +31,21 @@ export class LevelGenerator {
       const targetQueens = this.generateValidQueens(size, rng);
       if (!targetQueens) continue;
 
-      // 2. 以牛头为种子进行多源洪泛划分连通区域（注入破局点）
-      const regions = this.partitionBoard(size, targetQueens, rng, isEarlyTutorial, requireAnchor);
+      // 2. 以牛头为种子进行多源平衡洪泛划分连通区域（有且仅有至多 1 个单格破局点）
+      const allowAnchor = attempt < maxAtt * 0.75;
+      const regions = this.partitionBoard(size, targetQueens, rng, allowAnchor);
 
-      // 3. 验证唯一解性 (CSP 约束求解器)
+      // 3. 严格校验：单格颜色区域有且至多 1 个（singles <= 1），彻底杜绝多个单格送分！
+      const counts = new Array<number>(size).fill(0);
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          counts[regions[r][c]]++;
+        }
+      }
+      const singleCellCount = counts.filter(c => c === 1).length;
+      if (singleCellCount > 1) continue; // 铁律：有且至多 1 个单格！
+
+      // 4. 验证唯一解性 (CSP 约束求解器)
       const solutions = QueensSolver.solve(regions, 2);
       if (solutions.length === 1) {
         return {
@@ -46,7 +55,7 @@ export class LevelGenerator {
           solution: solutions[0],
           name: `第 ${levelId} 关`,
           targetCount: size,
-          initialTime: Math.min(150 + size * 20, 360)
+          initialTime: Math.min(150 + size * 30, 480)
         };
       }
     }
@@ -94,137 +103,122 @@ export class LevelGenerator {
   }
 
   /**
-   * 连通区域划分算法：注入“破局点”机制，保证 1~10 关拥有独立单格，高难关卡拥有狭管突破口
+   * 平衡连通区域划分算法：
+   * 选定至多 1 个种子作为单格独立破局点 (有且仅有一个)，其余 N-1 个色块必须多向均衡扩展
    */
   private static partitionBoard(
     size: number,
     seeds: GridCoord[],
     rng: () => number,
-    isEarlyTutorial: boolean,
-    requireAnchor: boolean
+    allowAnchor: boolean
   ): number[][] {
     const regions: number[][] = Array.from({ length: size }, () => new Array<number>(size).fill(-1));
-    const queue: { row: number; col: number; region: number }[] = [];
+    const queues: { row: number; col: number }[][] = Array.from({ length: size }, () => []);
 
-    // 若为 1~10 关，固定第 0 个种子绝不扩散（严格保持 size = 1 单格独占）
-    // 若为高级关卡，随机选 1 个种子作为狭管突破口
-    const isolatedSeedIdx = isEarlyTutorial ? 0 : (requireAnchor ? Math.floor(rng() * seeds.length) : -1);
+    // 随机选定至多 1 个种子作为单格破局点 (有且仅有 1 个)
+    const anchorIdx = allowAnchor ? Math.floor(rng() * size) : -1;
 
     seeds.forEach((seed, regionId) => {
       regions[seed.row][seed.col] = regionId;
-      if (regionId !== isolatedSeedIdx) {
-        queue.push({ row: seed.row, col: seed.col, region: regionId });
+      if (regionId !== anchorIdx) {
+        queues[regionId].push({ row: seed.row, col: seed.col });
       }
     });
 
     const dirs = [
-      { r: -1, c: 0 },
-      { r: 1, c: 0 },
-      { r: 0, c: -1 },
-      { r: 0, c: 1 }
+      { r: -1, c: 0 }, { r: 1, c: 0 }, { r: 0, c: -1 }, { r: 0, c: 1 }
     ];
 
-    while (queue.length > 0) {
-      const randIdx = Math.floor(rng() * queue.length);
-      const cur = queue.splice(randIdx, 1)[0];
+    // 阶段 1：先确保除 anchor 外的每个区域至少扩展 1 格（保证除 anchor 外所有色块 size >= 2）
+    for (let regionId = 0; regionId < size; regionId++) {
+      if (regionId === anchorIdx) continue;
+      const cur = seeds[regionId];
+      const shuffledDirs = [...dirs].sort(() => rng() - 0.5);
+      for (const d of shuffledDirs) {
+        const nr = cur.row + d.r;
+        const nc = cur.col + d.c;
+        if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] === -1) {
+          regions[nr][nc] = regionId;
+          queues[regionId].push({ row: nr, col: nc });
+          break;
+        }
+      }
+    }
 
+    // 阶段 2：全量洪泛扩散（anchor 绝不参与扩散）
+    const allNonAnchorQueues: { row: number; col: number; region: number }[] = [];
+    for (let regionId = 0; regionId < size; regionId++) {
+      if (regionId === anchorIdx) continue;
+      queues[regionId].forEach(pt => allNonAnchorQueues.push({ row: pt.row, col: pt.col, region: regionId }));
+    }
+
+    while (allNonAnchorQueues.length > 0) {
+      const randIdx = Math.floor(rng() * allNonAnchorQueues.length);
+      const cur = allNonAnchorQueues.splice(randIdx, 1)[0];
       const shuffledDirs = [...dirs].sort(() => rng() - 0.5);
       for (const d of shuffledDirs) {
         const nr = cur.row + d.r;
         const nc = cur.col + d.c;
         if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] === -1) {
           regions[nr][nc] = cur.region;
-          queue.push({ row: nr, col: nc, region: cur.region });
+          allNonAnchorQueues.push({ row: nr, col: nc, region: cur.region });
         }
       }
     }
 
-    // 洪泛未覆盖的空洞禁止带着 regionId = -1 进入求解器
+    // 阶段 3：填充未覆盖的剩余空格（优先填入非 anchor 邻接区域）
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (regions[r][c] !== -1) continue;
-        let filled = false;
         for (const d of dirs) {
           const nr = r + d.r;
           const nc = c + d.c;
-          if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] >= 0) {
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] !== -1 && regions[nr][nc] !== anchorIdx) {
             regions[r][c] = regions[nr][nc];
-            filled = true;
             break;
           }
         }
-        if (!filled) regions[r][c] = 0;
+        if (regions[r][c] === -1) regions[r][c] = (anchorIdx === 0 ? 1 : 0);
       }
     }
 
     return regions;
   }
 
-  /**
-   * 确定性回溯：在无 RNG 打乱时找出一组合法牛头坐标（每行每列 1 个、8 邻域不互邻）
-   */
-  private static constructValidQueens(size: number): GridCoord[] | null {
-    const queens: GridCoord[] = [];
-    const usedCols = new Array<boolean>(size).fill(false);
-
-    const backtrack = (row: number): boolean => {
-      if (row === size) return true;
-      for (let col = 0; col < size; col++) {
-        if (usedCols[col]) continue;
-        let safe = true;
-        for (const q of queens) {
-          if (QueensSolver.isAdjacent(q, { row, col })) {
-            safe = false;
-            break;
-          }
-        }
-        if (!safe) continue;
-        usedCols[col] = true;
-        queens.push({ row, col });
-        if (backtrack(row + 1)) return true;
-        queens.pop();
-        usedCols[col] = false;
-      }
-      return false;
-    };
-
-    return backtrack(0) ? queens : null;
-  }
-
-  /**
-   * 强制唯一解构造：第 0 头牛所在区域吞下所有非种子格，其余种子格保持单格区域。
-   * n-1 个单格颜色强制占住对应行列，剩余交叉点唯一，因此解集大小恒为 1。
-   */
-  private static forcedUniqueRegions(size: number, queens: GridCoord[]): number[][] {
-    const regions: number[][] = Array.from({ length: size }, () => new Array<number>(size).fill(0));
-    queens.forEach((q, regionId) => {
-      regions[q.row][q.col] = regionId;
-    });
-    return regions;
-  }
-
-  /**
-   * 生成失败时的保底盘：禁止再交出 (r+c)%n 那种偶边长无解、奇边长多解的废图
-   */
   private static getFallbackLevel(id: number, size: number): LevelData {
-    let queens: GridCoord[] | null = null;
-    for (let i = 0; i < 400; i++) {
-      queens = this.generateValidQueens(size, this.createRNG((id * 104729 + i * 9176) >>> 0));
-      if (queens) break;
+    for (let i = 0; i < 2000; i++) {
+      const rng = this.createRNG((id * 104729 + i * 9176) >>> 0);
+      const queens = this.generateValidQueens(size, rng);
+      if (!queens) continue;
+      const regions = this.partitionBoard(size, queens, rng, true);
+      const counts = new Array<number>(size).fill(0);
+      for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) counts[regions[r][c]]++;
+      if (counts.filter(c => c === 1).length > 1) continue;
+      const solutions = QueensSolver.solve(regions, 2);
+      if (solutions.length === 1) {
+        return {
+          id,
+          size,
+          regions,
+          solution: solutions[0],
+          name: `第 ${id} 关`,
+          targetCount: size,
+          initialTime: Math.min(150 + size * 30, 480)
+        };
+      }
     }
-    if (!queens) queens = this.constructValidQueens(size);
 
-    const regions = this.forcedUniqueRegions(size, queens ?? []);
-    const solutions = QueensSolver.solve(regions, 2);
-
+    // 极端容错
+    const queens: GridCoord[] = Array.from({ length: size }, (_, r) => ({ row: r, col: (r * 2 + 1) % size }));
+    const regions = this.partitionBoard(size, queens, this.createRNG(id), true);
     return {
       id,
       size,
       regions,
-      solution: solutions[0] ?? queens ?? [],
+      solution: queens,
       name: `第 ${id} 关`,
       targetCount: size,
-      initialTime: Math.min(150 + size * 20, 360)
+      initialTime: Math.min(150 + size * 30, 480)
     };
   }
 }
