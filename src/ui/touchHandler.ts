@@ -145,29 +145,25 @@ export class TouchHandler {
     const key = `${r},${c}`;
     const current = gameState.grid[r][c];
 
-    if (this.lastTapCell === key && now - this.lastTapTime < 300) {
-      // Double tap -> Place/Remove Animal
+    if (this.lastTapCell === key && now - this.lastTapTime < 350) {
+      // 双击：试图在 (r, c) 放置牛头（严格校验唯一正解）
       if (current === CellState.ANIMAL) {
         gameState.setCellState(r, c, CellState.EMPTY);
       } else {
-        gameState.setCellState(r, c, CellState.ANIMAL);
-        if (gameState.user.settings.autoCross) {
-          // hack to trigger auto-cross
-          (gameState as any).autoFillCross?.(r, c);
+        gameState.handlePlaceAnimal(r, c);
+        if (gameState.user.settings.autoCross && gameState.grid[r][c] === CellState.ANIMAL) {
+          gameState.autoFillCross(r, c);
         }
       }
       this.lastTapCell = null;
       this.lastTapTime = 0;
     } else {
-      // Single tap -> Toggle Cross
+      // 单击：排查画叉 / 清除
       if (current === CellState.EMPTY) {
         gameState.setCellState(r, c, CellState.CROSS);
-      } else if (current === CellState.CROSS) {
+      } else if (current === CellState.CROSS || current === CellState.ERROR_CROSS) {
         gameState.setCellState(r, c, CellState.EMPTY);
       } else if (current === CellState.ANIMAL) {
-        // If it's already an animal, a single tap could either do nothing or remove it.
-        // Let's make single tap on animal remove it for better UX, or wait for double tap.
-        // For safety, single tap on animal removes it.
         gameState.setCellState(r, c, CellState.EMPTY);
       }
       this.lastTapCell = key;

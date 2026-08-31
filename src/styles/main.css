@@ -58,114 +58,47 @@ body {
 }
 
 /* ================= 顶部 HUD ================= */
-.hud-header {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.hud-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.hud-left-group, .hud-right-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.hud-header { display: flex; flex-direction: column; gap: 10px; }
+.hud-top-row { display: flex; justify-content: space-between; align-items: center; }
+.hud-left-group, .hud-right-group { display: flex; align-items: center; gap: 8px; }
 
 .game-icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  border: 1.5px solid #D6E4EC;
-  color: #34495E;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08);
-  cursor: pointer;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #FFFFFF; border: 1.5px solid #D6E4EC; color: #34495E;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08); cursor: pointer;
   transition: transform 0.15s ease, background 0.15s ease;
 }
-.game-icon-btn:active {
-  transform: scale(0.92);
-  background: #F2F7FA;
-}
-.hud-svg-icon {
-  width: 20px;
-  height: 20px;
-}
+.game-icon-btn:active { transform: scale(0.92); background: #F2F7FA; }
+.hud-svg-icon { width: 20px; height: 20px; }
 
 .coin-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #FFFFFF;
-  border: 1.5px solid #F5CBA7;
-  padding: 4px 10px;
-  border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 4px; background: #FFFFFF;
+  border: 1.5px solid #F5CBA7; padding: 4px 10px; border-radius: 20px;
   box-shadow: 0 3px 8px rgba(243, 156, 18, 0.12);
 }
-.coin-icon {
-  font-size: 15px;
-}
-.badge-val {
-  font-size: 13px;
-  font-weight: 800;
-  color: #D35400;
-}
+.coin-icon { font-size: 15px; }
+.badge-val { font-size: 13px; font-weight: 800; color: #D35400; }
 
-.hud-center-group {
-  text-align: center;
-}
+.hud-center-group { text-align: center; }
 
 .level-title-btn {
-  background: #FFFFFF;
-  border: 1.5px solid #D6E4EC;
-  border-radius: 20px;
-  padding: 5px 14px;
-  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  background: #FFFFFF; border: 1.5px solid #D6E4EC; border-radius: 20px;
+  padding: 5px 14px; box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08);
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
   transition: transform 0.15s ease;
 }
-.level-title-btn:active {
-  transform: scale(0.95);
-}
-.level-title-text {
-  font-size: 15px;
-  font-weight: 900;
-  color: #2C3E50;
-  letter-spacing: 0.5px;
-}
-.level-arrow {
-  font-size: 12px;
-  color: #7F8C8D;
-}
+.level-title-btn:active { transform: scale(0.95); }
+.level-title-text { font-size: 15px; font-weight: 900; color: #2C3E50; letter-spacing: 0.5px; }
+.level-arrow { font-size: 12px; color: #7F8C8D; }
 
 .streak-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #FFFFFF;
-  border: 1.5px solid #F9E79F;
-  padding: 4px 10px;
-  border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 4px; background: #FFFFFF;
+  border: 1.5px solid #F9E79F; padding: 4px 10px; border-radius: 20px;
   box-shadow: 0 3px 8px rgba(241, 196, 15, 0.15);
 }
-.trophy-icon {
-  font-size: 14px;
-}
-.streak-text {
-  font-size: 13px;
-  font-weight: 800;
-  color: #B7950B;
-}
+.trophy-icon { font-size: 14px; }
+.streak-text { font-size: 13px; font-weight: 800; color: #B7950B; }
 
 .hud-status-row {
   display: flex;
@@ -404,7 +337,7 @@ body {
   filter: drop-shadow(0 2px 6px rgba(231, 76, 60, 0.5));
 }
 
-/* 成功落子：生动牛头跳出来放大、回弹缩小归位动画 */
+/* 成功落子：生动牛头仅在新放置时跳出来放大、回弹缩小归位动画 */
 .cell-animal {
   width: 88%;
   height: 88%;
@@ -412,6 +345,9 @@ body {
   align-items: center;
   justify-content: center;
   pointer-events: none;
+}
+
+.cell-animal.bull-jump-pop {
   animation: bullJumpPop 0.46s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 

@@ -258,17 +258,59 @@ export class GameStateManager {
     }
   }
 
+  /**
+   * 玩家试图在 (r, c) 放置牛头（严格校验唯一正解）
+   */
+  public handlePlaceAnimal(r: number, c: number) {
+    if (this.status !== 'PLAYING') return;
+
+    this.pushHistory();
+    const solution = this.currentLevel.solution || (QueensSolver.solve(this.currentLevel.regions)[0] ?? []);
+    const isCorrect = solution.some(s => s.row === r && s.col === c);
+
+    if (!isCorrect) {
+      // ❌ 选错了：坚决不能放牛头！直接变成红色错误叉叉 ❌
+      this.grid[r][c] = CellState.ERROR_CROSS;
+      this.lastErrorCell = { row: r, col: c };
+      this.lastPopCell = null;
+      soundManager.playConflict();
+      if (this.onErrorMessage) {
+        this.onErrorMessage('该位置选错啦，已为你标红排除！');
+      }
+      this.evaluateBoard();
+      setTimeout(() => {
+        if (this.lastErrorCell && this.lastErrorCell.row === r && this.lastErrorCell.col === c) {
+          this.lastErrorCell = null;
+          this.notify();
+        }
+      }, 800);
+    } else {
+      // ✅ 选对了：该位置是真正的正解牛头！
+      this.grid[r][c] = CellState.ANIMAL;
+      this.lastPopCell = { row: r, col: c };
+      this.lastErrorCell = null;
+      soundManager.playAnimal();
+      this.evaluateBoard();
+    }
+  }
+
   public setCellState(r: number, c: number, state: CellState, recordHistory: boolean = true) {
     if (this.status !== 'PLAYING') return;
     if (this.grid[r][c] === state) return;
 
+    if (state === CellState.ANIMAL) {
+      this.handlePlaceAnimal(r, c);
+      return;
+    }
+
     if (recordHistory) this.pushHistory();
     this.grid[r][c] = state;
+    this.lastPopCell = null; // 清除新落子标记，确保已有牛头不重复跳动
 
     if (state === CellState.CROSS) {
       soundManager.playCross();
-    } else if (state === CellState.ANIMAL) {
-      soundManager.playAnimal();
+    } else if (state === CellState.EMPTY) {
+      soundManager.playTap();
     }
 
     this.evaluateBoard();

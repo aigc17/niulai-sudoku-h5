@@ -124,8 +124,9 @@ export class BoardRenderer {
             cell.classList.add('cell-error-bg');
           }
         } else if (state === CellState.ANIMAL) {
+          const isJustPopped = gameState.lastPopCell && gameState.lastPopCell.row === r && gameState.lastPopCell.col === c;
           const animalEl = document.createElement('div');
-          animalEl.className = 'cell-animal';
+          animalEl.className = `cell-animal ${isJustPopped ? 'bull-jump-pop' : ''}`;
           animalEl.innerHTML = `<img src="/bull.png" class="bull-sticker-img" alt="牛头" />`;
           cell.appendChild(animalEl);
         }
