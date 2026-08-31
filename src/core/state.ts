@@ -488,19 +488,26 @@ export class GameStateManager {
 
   private loadStorage() {
     try {
-      // 使用全新 V2 存储键，彻底清除旧版测试残留的 24 关脏数据
+      // 从本地持久化存储加载用户关卡进度与设置
       const data = localStorage.getItem('NIULAI_SUDOKU_USER_V2');
       if (data) {
         const parsed = JSON.parse(data);
         this.user = { ...this.user, ...parsed };
+        
+        // 容错校准：确保 level 与 maxUnlockedLevel 有效且合法
+        this.user.maxUnlockedLevel = Math.max(1, this.user.maxUnlockedLevel || this.user.level || 1);
+        this.user.level = Math.max(1, Math.min(this.user.level || 1, this.user.maxUnlockedLevel));
+
         soundManager.setSoundEnabled(this.user.settings.sound);
         soundManager.setHapticsEnabled(this.user.settings.haptics);
       } else {
         // 新用户默认从第 1 关开始
         this.user.level = 1;
+        this.user.maxUnlockedLevel = 1;
       }
     } catch {
       this.user.level = 1;
+      this.user.maxUnlockedLevel = 1;
     }
   }
 }
