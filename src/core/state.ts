@@ -36,7 +36,6 @@ export class GameStateManager {
     settings: {
       sound: true,
       haptics: true,
-      colorblind: false,
       coordinates: false,
       autoCross: false
     }
@@ -391,13 +390,6 @@ export class GameStateManager {
     this.evaluateBoard();
     this.saveStorage();
     return true;
-  }
-
-  public toggleColorblind() {
-    this.user.settings.colorblind = !this.user.settings.colorblind;
-    soundManager.playButton();
-    this.saveStorage();
-    this.notify();
   }
 
   public toggleCoordinates() {

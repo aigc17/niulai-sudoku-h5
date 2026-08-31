@@ -17,16 +17,16 @@ import { LevelGenerator } from './generator';
 import { QueensSolver } from './solver';
 
 export const PALETTE: PaletteColor[] = [
-  { id: 0, bg: '#F07C68', border: '#E06550', name: '珊瑚橙红', symbol: '●' },
-  { id: 1, bg: '#F6BA58', border: '#E5A540', name: '暖金橙黄', symbol: '▲' },
-  { id: 2, bg: '#F6A8B8', border: '#E592A3', name: '樱花粉红', symbol: '★' },
-  { id: 3, bg: '#D8DE6E', border: '#C2C957', name: '青柠嫩绿', symbol: '■' },
-  { id: 4, bg: '#7E98D6', border: '#6882C0', name: '静谧紫蓝', symbol: '◆' },
-  { id: 5, bg: '#AFDCF5', border: '#96C8E2', name: '浅天湖蓝', symbol: '✚' },
-  { id: 6, bg: '#B3A4D4', border: '#9B8CBE', name: '丁香浅紫', symbol: '⬟' },
-  { id: 7, bg: '#80CBC4', border: '#66B2AA', name: '薄荷蓝绿', symbol: '✿' },
-  { id: 8, bg: '#FFAB91', border: '#E59278', name: '蜜桃暖粉', symbol: '⬢' },
-  { id: 9, bg: '#FFE082', border: '#E5C768', name: '奶油淡黄', symbol: '✦' }
+  { id: 0, bg: '#F07C68', border: '#E06550', name: '珊瑚橙红' },
+  { id: 1, bg: '#F6BA58', border: '#E5A540', name: '暖金橙黄' },
+  { id: 2, bg: '#F6A8B8', border: '#E592A3', name: '樱花粉红' },
+  { id: 3, bg: '#D8DE6E', border: '#C2C957', name: '青柠嫩绿' },
+  { id: 4, bg: '#7E98D6', border: '#6882C0', name: '静谧紫蓝' },
+  { id: 5, bg: '#AFDCF5', border: '#96C8E2', name: '浅天湖蓝' },
+  { id: 6, bg: '#B3A4D4', border: '#9B8CBE', name: '丁香浅紫' },
+  { id: 7, bg: '#80CBC4', border: '#66B2AA', name: '薄荷蓝绿' },
+  { id: 8, bg: '#FFAB91', border: '#E59278', name: '蜜桃暖粉' },
+  { id: 9, bg: '#FFE082', border: '#E5C768', name: '奶油淡黄' }
 ];
 
 export const PRESET_LEVELS: Record<number, LevelData> = {

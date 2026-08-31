@@ -32,9 +32,8 @@ export class BoardRenderer {
   public render() {
     const level = gameState.currentLevel;
     const size = level.size;
-    const isColorblind = gameState.user.settings.colorblind;
     const showCoordinates = gameState.user.settings.coordinates;
-    const settingsKey = `${level.id}_${size}_${isColorblind}_${showCoordinates}`;
+    const settingsKey = `${level.id}_${size}_${showCoordinates}`;
 
     // 仅在关卡或布局结构变化时重建 DOM；否则执行毫秒级就地增量更新！
     if (settingsKey !== this.currentGridSettingsKey) {
@@ -48,7 +47,6 @@ export class BoardRenderer {
   private buildGridDOM() {
     const level = gameState.currentLevel;
     const size = level.size;
-    const isColorblind = gameState.user.settings.colorblind;
     const showCoordinates = gameState.user.settings.coordinates;
 
     this.container.innerHTML = '';
@@ -102,14 +100,6 @@ export class BoardRenderer {
 
         // 计算边界隔断
         this.applyRegionBorders(cell, r, c, level.regions, size);
-
-        // 色盲模式水印
-        if (isColorblind) {
-          const symEl = document.createElement('span');
-          symEl.className = 'cell-symbol';
-          symEl.innerText = color.symbol;
-          cell.appendChild(symEl);
-        }
 
         // 内容插槽容器
         const contentSlot = document.createElement('div');

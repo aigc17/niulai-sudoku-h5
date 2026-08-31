@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const boardEl = document.getElementById('board-container') as HTMLElement;
   const toolbarEl = document.getElementById('bottom-toolbar') as HTMLElement;
   const modalOverlayEl = document.getElementById('modal-overlay') as HTMLElement;
-  const colorblindBtn = document.getElementById('colorblind-toggle-btn') as HTMLElement;
 
   // 1. 初始化各子系统渲染器
   const modalRenderer = new ModalRenderer(modalOverlayEl);
@@ -50,12 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     HudRenderer.showToast(msg);
   };
 
-  // 2. 绑定色盲辅助模式悬浮按钮
-  colorblindBtn.addEventListener('click', () => {
-    gameState.toggleColorblind();
-  });
-
-  // 3. 用户首次任意触屏操作时解锁 iOS Web Audio 上下文
+  // 2. 用户首次任意触屏操作时解锁 iOS Web Audio 上下文
   const unlockAudio = () => {
     soundManager.unlock();
     window.removeEventListener('touchstart', unlockAudio);

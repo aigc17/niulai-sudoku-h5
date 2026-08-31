@@ -139,10 +139,6 @@ export class ModalRenderer {
             <input type="checkbox" id="chk-autocross" ${user.settings.autoCross ? 'checked' : ''} />
           </div>
           <div class="setting-row">
-            <span>色盲辅助模式</span>
-            <input type="checkbox" id="chk-colorblind" ${user.settings.colorblind ? 'checked' : ''} />
-          </div>
-          <div class="setting-row">
             <span>坐标标尺</span>
             <input type="checkbox" id="chk-coords" ${user.settings.coordinates ? 'checked' : ''} />
           </div>
@@ -242,10 +238,6 @@ export class ModalRenderer {
 
     this.overlayEl.querySelector('#chk-autocross')?.addEventListener('change', (e) => {
       user.settings.autoCross = (e.target as HTMLInputElement).checked;
-    });
-
-    this.overlayEl.querySelector('#chk-colorblind')?.addEventListener('change', () => {
-      gameState.toggleColorblind();
     });
 
     this.overlayEl.querySelector('#chk-coords')?.addEventListener('change', () => {

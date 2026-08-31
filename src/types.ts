@@ -64,7 +64,6 @@ export interface UserProfile {
   settings: {
     sound: boolean;
     haptics: boolean;
-    colorblind: boolean;
     coordinates: boolean;
     autoCross: boolean; // 放置小马时自动填充周围 X
   };
@@ -75,5 +74,4 @@ export interface PaletteColor {
   bg: string;
   border: string;
   name: string;
-  symbol: string; // 色盲模式下的辅助符号
 }
