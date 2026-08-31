@@ -93,7 +93,6 @@ export class BoardRenderer {
         this.applyRegionBorders(cell, r, c, level.regions, size);
 
         const isError = gameState.lastErrorCell && gameState.lastErrorCell.row === r && gameState.lastErrorCell.col === c;
-        const isJustPopped = gameState.lastPopCell && gameState.lastPopCell.row === r && gameState.lastPopCell.col === c;
 
         if (isConflict) {
           cell.classList.add('cell-conflict');
@@ -126,7 +125,7 @@ export class BoardRenderer {
           }
         } else if (state === CellState.ANIMAL) {
           const animalEl = document.createElement('div');
-          animalEl.className = `cell-animal ${isJustPopped ? 'bull-pop-spring' : ''}`;
+          animalEl.className = 'cell-animal';
           animalEl.innerHTML = `<img src="/bull.png" class="bull-sticker-img" alt="牛头" />`;
           cell.appendChild(animalEl);
         }

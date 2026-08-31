@@ -98,8 +98,7 @@ export class SoundManager {
   }
 
   /**
-   * 2. 划叉/滑动排查音效 (Crisp Clock Tick / Woodblock "哒哒哒" 机械秒针声)
-   * 极度清脆明快、富有治愈感的极短高频滴答声，滑动连划时产生极其舒适的连续打击感
+   * 2. 划叉/点击排查音效 (100% 还原 iOS 原生键盘/屏幕轻敲 "哒-哒-哒" 瞬态机械声)
    */
   public playCross() {
     if (!this.soundEnabled) return;
@@ -107,28 +106,54 @@ export class SoundManager {
     if (!this.ctx) return;
 
     const t = this.ctx.currentTime;
+    
+    // 生成 9ms 高频物理敲击脉冲
+    const sampleRate = this.ctx.sampleRate;
+    const bufferSize = Math.max(64, Math.floor(sampleRate * 0.009));
+    const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      // 真实物理碰撞衰减曲线
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // 带通滤波：锁定 iOS 原生键盘 2100Hz 质感
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2100, t);
+    filter.Q.setValueAtTime(3.5, t);
+
+    // 辅助高频微谐振
     const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1800, t);
+    osc.frequency.exponentialRampToValueAtTime(800, t + 0.009);
+
+    oscGain.gain.setValueAtTime(0.2, t);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.009);
+
     const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.65, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.009);
 
-    // 采用高频正弦波 (1500Hz 极速微滑降到 1100Hz)
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1500, t);
-    osc.frequency.exponentialRampToValueAtTime(1100, t + 0.022);
-
-    // 瞬态 25ms 快速衰减，清脆干脆，绝无沉闷感
-    gain.gain.setValueAtTime(0.28, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
-
-    osc.connect(gain);
+    noise.connect(filter);
+    filter.connect(gain);
+    osc.connect(oscGain);
+    oscGain.connect(gain);
     gain.connect(this.ctx.destination);
 
+    noise.start(t);
     osc.start(t);
-    osc.stop(t + 0.025);
-    this.triggerHaptic(6);
+    osc.stop(t + 0.009);
+    this.triggerHaptic(4);
   }
 
   /**
-   * 3. 放置小马/小牛命中音 (Animal - 🐴/🐮)
+   * 3. 放置正确小牛命中音 (Bouncy Joyful Victory Chime - 🐮)
    */
   public playAnimal() {
     if (!this.soundEnabled) return;
@@ -136,27 +161,29 @@ export class SoundManager {
     if (!this.ctx) return;
 
     const t = this.ctx.currentTime;
-    const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5 阳光大三和弦
+    const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 阳光大四和弦
     
     freqs.forEach((freq, idx) => {
       if (!this.ctx) return;
+      const startTime = t + idx * 0.035;
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, t + idx * 0.03);
+      osc.frequency.setValueAtTime(freq, startTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.02, startTime + 0.25);
 
-      gain.gain.setValueAtTime(0.18, t + idx * 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.03 + 0.2);
+      gain.gain.setValueAtTime(0.25, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
 
-      osc.start(t + idx * 0.03);
-      osc.stop(t + idx * 0.03 + 0.2);
+      osc.start(startTime);
+      osc.stop(startTime + 0.25);
     });
 
-    this.triggerHaptic([20, 40, 20]);
+    this.triggerHaptic([15, 30, 15]);
   }
 
   /**
