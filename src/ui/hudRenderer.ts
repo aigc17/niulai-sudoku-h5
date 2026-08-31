@@ -49,7 +49,7 @@ export class HudRenderer {
   }
 
   /**
-   * 渲染顶部资源、关卡、攻略与倒计时状态栏
+   * 渲染顶部一体化白色导航栏与状态胶囊
    */
   public renderHeader() {
     const user = gameState.user;
@@ -57,48 +57,47 @@ export class HudRenderer {
     const remainingPonies = gameState.remainingPonies;
 
     this.headerEl.innerHTML = `
-      <div class="hud-nav hud-top-row">
-        <div class="hud-nav-side hud-nav-left hud-left-group">
-          <button id="btn-settings" class="game-icon-btn settings-btn" aria-label="设置" title="游戏设置">
-            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 一体化顶部白色主导航栏 -->
+      <div class="hud-main-navbar">
+        <div class="navbar-left">
+          <button id="btn-settings" class="nav-icon-btn" aria-label="设置" title="游戏设置">
+            <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0 1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
           </button>
-          <button id="btn-guide" class="game-icon-btn guide-btn" aria-label="攻略" title="玩法攻略与破局技巧">
-            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button id="btn-guide" class="nav-icon-btn" aria-label="攻略" title="玩法攻略与破局技巧">
+            <svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
           </button>
         </div>
 
-        <button id="btn-level-title" class="level-title-btn" title="点击选关">
-          <span class="level-title-text">第 ${user.level} 关</span>
-          <span class="level-arrow">▾</span>
+        <button id="btn-level-title" class="navbar-level-btn" title="点击选关">
+          <span class="level-btn-text">第 ${user.level} 关</span>
+          <span class="level-btn-arrow">▾</span>
         </button>
 
-        <div class="hud-nav-side hud-nav-right hud-right-group">
-          <div class="streak-badge">
-            <span class="trophy-icon">🏆</span>
-            <span class="streak-text">${user.streak}</span>
+        <div class="navbar-right">
+          <div class="navbar-coin-badge">
+            <span class="coin-icon">🪙</span>
+            <span class="coin-num">${user.coins}</span>
           </div>
         </div>
       </div>
 
-      <div class="hud-metrics hud-status-row">
-        <div class="metric-chip coin-badge">
-          <span class="metric-ico coin-icon">🪙</span>
-          <span class="badge-val">${user.coins}</span>
+      <!-- 状态指示胶囊条 (虚线边框质感) -->
+      <div class="hud-status-strip">
+        <div class="status-dashed-pill">
+          <img src="/bull.png" class="status-bull-img" alt="牛头" />
+          <span class="status-label">剩余:</span>
+          <span class="status-num-red">${remainingPonies}</span>
         </div>
-        <div class="metric-chip status-pill target-pill">
-          <img src="/bull.png" class="pill-bull-icon" alt="牛头" />
-          <span class="pill-label">剩余</span>
-          <span class="pill-num highlight-red">${remainingPonies}</span>
-        </div>
-        <div class="metric-chip status-pill timer-pill">
-          <span class="pill-label">时间</span>
-          <span class="pill-num highlight-red">${this.formatTime(time)}</span>
+        <div class="status-dashed-pill timer-pill">
+          <span class="status-clock-icon">⏱️</span>
+          <span class="status-label">剩余时间:</span>
+          <span class="status-num-red timer-val">${this.formatTime(time)}</span>
         </div>
       </div>
     `;
@@ -123,29 +122,28 @@ export class HudRenderer {
    * 独立极速刷新倒计时数字，避免触发全屏棋盘重绘
    */
   public updateTimer(time: number) {
-    const timerNumEl = this.headerEl.querySelector('.timer-pill .pill-num');
+    const timerNumEl = this.headerEl.querySelector('.timer-val');
     if (timerNumEl) {
       timerNumEl.textContent = this.formatTime(time);
     }
   }
 
   /**
-   * 渲染关卡核心三大规则提示条 (马卡龙三列精巧卡片)
+   * 渲染关卡核心三大规则提示条 (蓝线描边框 + 虚线分隔，100% 还原原版设计且零截断)
    */
   public renderRulesBanner() {
     this.bannerEl.innerHTML = `
-      <div class="rules-card-container">
-        <div class="rule-card">
-          <div class="rule-title">每种颜色1个</div>
-          <div class="rule-sub">牛头</div>
+      <div class="rules-blueprint-box">
+        <div class="rule-col">
+          <div class="rule-text-row">每种颜色1个</div>
+          <div class="rule-text-row">牛头</div>
         </div>
-        <div class="rule-card">
-          <div class="rule-title">每行每列均有且</div>
-          <div class="rule-sub">仅有1个牛头</div>
+        <div class="rule-col">
+          <div class="rule-text-row">每行每列均有且</div>
+          <div class="rule-text-row">仅有1个牛头</div>
         </div>
-        <div class="rule-card">
-          <div class="rule-title">牛头不能相邻</div>
-          <div class="rule-sub">(含斜向)</div>
+        <div class="rule-col">
+          <div class="rule-text-row">牛头不能相邻</div>
         </div>
       </div>
     `;
