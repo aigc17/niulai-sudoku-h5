@@ -21,7 +21,12 @@ export class LevelGenerator {
    * 确保第 N 关在任何时间、任何设备上生成的地图 100% 相同且具有严格唯一正解与逻辑破局点
    */
   public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts?: number): LevelData {
-    const maxAtt = maxAttempts ?? (size >= 8 ? 2000 : 1000);
+    const maxAtt = maxAttempts ?? (size >= 8 ? 3500 : 1500);
+    // 难度梯度体系：
+    // 1~3 关：新手教学，100% 具备 1 个单格引导破局
+    // 4~15 关：初阶进阶，单格与 0 单格穿插
+    // 16+ 关：高难度硬核，优先保证 0 单格（完全考验色块多边形与行列对角线多维推导，无任何白送单格！）
+    const wantsZeroAnchor = levelId > 15 || (levelId > 3 && levelId % 2 === 0);
 
     for (let attempt = 0; attempt < maxAtt; attempt++) {
       const seed = (levelId * 10007 + attempt * 269) >>> 0;
@@ -31,11 +36,11 @@ export class LevelGenerator {
       const targetQueens = this.generateValidQueens(size, rng);
       if (!targetQueens) continue;
 
-      // 2. 以牛头为种子进行多源平衡洪泛划分连通区域（有且仅有至多 1 个单格破局点）
-      const allowAnchor = attempt < maxAtt * 0.75;
+      // 2. 以牛头为种子进行多源平衡洪泛划分连通区域
+      const allowAnchor = wantsZeroAnchor ? (attempt > maxAtt * 0.6) : (attempt < maxAtt * 0.6);
       const regions = this.partitionBoard(size, targetQueens, rng, allowAnchor);
 
-      // 3. 严格校验：单格颜色区域有且至多 1 个（singles <= 1），彻底杜绝多个单格送分！
+      // 3. 严格校验：单格颜色区域有且至多 1 个（singles <= 1）；高难度关卡前期强制 0 单格！
       const counts = new Array<number>(size).fill(0);
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
@@ -43,7 +48,8 @@ export class LevelGenerator {
         }
       }
       const singleCellCount = counts.filter(c => c === 1).length;
-      if (singleCellCount > 1) continue; // 铁律：有且至多 1 个单格！
+      if (singleCellCount > 1) continue; // 铁律：全局严禁 >= 2 个单格送分！
+      if (wantsZeroAnchor && attempt < maxAtt * 0.6 && singleCellCount > 0) continue; // 高难关卡前期严格保证 0 单格！
 
       // 4. 验证唯一解性 (CSP 约束求解器)
       const solutions = QueensSolver.solve(regions, 2);
