@@ -1,6 +1,6 @@
 /**
  * [INPUT]: GridCoord, LevelData - 引用自 src/types.ts, QueensSolver - 引用自 src/core/solver.ts
- * [OUTPUT]: LevelGenerator 生成器类 (generateUniqueLevel, partitionBoard)
+ * [OUTPUT]: LevelGenerator 生成器类 (generateUniqueLevel)；失败时交出强制唯一解盘，禁止无解/多解兜底
  * [POS]: 程序化关卡生成器，基于图着色与多源洪泛算法生成保证唯一解的关卡
  *
  * [自指声明]
@@ -20,11 +20,13 @@ export class LevelGenerator {
    * 基于关卡 ID 确定性伪随机数生成器 (Mulberry32 PRNG)
    * 确保第 N 关在任何时间、任何设备上生成的地图 100% 相同且具有严格唯一正解与逻辑破局点
    */
-  public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts: number = 350): LevelData {
+  public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts?: number): LevelData {
     const isEarlyTutorial = levelId <= 10; // 1~10 关强制生成 100% 独立单格单色突破口
     const requireAnchor = true;           // 全量关卡标配“破局点生成器”，绝不刁难玩家
+    // 前 350 次种子与旧版完全一致，已生成成功的关卡盘面不变；大棋盘追加尝试以免掉进兜底
+    const attempts = maxAttempts ?? (size >= 10 ? 1500 : size >= 9 ? 900 : 350);
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
       const seed = (levelId * 10007 + attempt * 269) >>> 0;
       const rng = this.createRNG(seed);
 
@@ -138,20 +140,92 @@ export class LevelGenerator {
       }
     }
 
+    // 洪泛未覆盖的空洞禁止带着 regionId = -1 进入求解器
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (regions[r][c] !== -1) continue;
+        let filled = false;
+        for (const d of dirs) {
+          const nr = r + d.r;
+          const nc = c + d.c;
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] >= 0) {
+            regions[r][c] = regions[nr][nc];
+            filled = true;
+            break;
+          }
+        }
+        if (!filled) regions[r][c] = 0;
+      }
+    }
+
     return regions;
   }
 
+  /**
+   * 确定性回溯：在无 RNG 打乱时找出一组合法牛头坐标（每行每列 1 个、8 邻域不互邻）
+   */
+  private static constructValidQueens(size: number): GridCoord[] | null {
+    const queens: GridCoord[] = [];
+    const usedCols = new Array<boolean>(size).fill(false);
+
+    const backtrack = (row: number): boolean => {
+      if (row === size) return true;
+      for (let col = 0; col < size; col++) {
+        if (usedCols[col]) continue;
+        let safe = true;
+        for (const q of queens) {
+          if (QueensSolver.isAdjacent(q, { row, col })) {
+            safe = false;
+            break;
+          }
+        }
+        if (!safe) continue;
+        usedCols[col] = true;
+        queens.push({ row, col });
+        if (backtrack(row + 1)) return true;
+        queens.pop();
+        usedCols[col] = false;
+      }
+      return false;
+    };
+
+    return backtrack(0) ? queens : null;
+  }
+
+  /**
+   * 强制唯一解构造：第 0 头牛所在区域吞下所有非种子格，其余种子格保持单格区域。
+   * n-1 个单格颜色强制占住对应行列，剩余交叉点唯一，因此解集大小恒为 1。
+   */
+  private static forcedUniqueRegions(size: number, queens: GridCoord[]): number[][] {
+    const regions: number[][] = Array.from({ length: size }, () => new Array<number>(size).fill(0));
+    queens.forEach((q, regionId) => {
+      regions[q.row][q.col] = regionId;
+    });
+    return regions;
+  }
+
+  /**
+   * 生成失败时的保底盘：禁止再交出 (r+c)%n 那种偶边长无解、奇边长多解的废图
+   */
   private static getFallbackLevel(id: number, size: number): LevelData {
-    const regions: number[][] = Array.from({ length: size }, (_, r) =>
-      Array.from({ length: size }, (_, c) => (r + c) % size)
-    );
+    let queens: GridCoord[] | null = null;
+    for (let i = 0; i < 400; i++) {
+      queens = this.generateValidQueens(size, this.createRNG((id * 104729 + i * 9176) >>> 0));
+      if (queens) break;
+    }
+    if (!queens) queens = this.constructValidQueens(size);
+
+    const regions = this.forcedUniqueRegions(size, queens ?? []);
+    const solutions = QueensSolver.solve(regions, 2);
+
     return {
       id,
       size,
       regions,
+      solution: solutions[0] ?? queens ?? [],
       name: `第 ${id} 关`,
       targetCount: size,
-      initialTime: 240
+      initialTime: Math.min(150 + size * 20, 360)
     };
   }
 }

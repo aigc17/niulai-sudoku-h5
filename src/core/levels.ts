@@ -1,7 +1,7 @@
 /**
  * [INPUT]: LevelData, PaletteColor - 引用自 src/types.ts, LevelGenerator - 引用自 src/core/generator.ts
- * [OUTPUT]: PRESET_LEVELS (精选关卡库), PALETTE (马卡龙调色板), getLevelById (按关卡号获取或生成)
- * [POS]: 关卡题库与美学色板中心，包含 100% 复刻原图的第 24 关与全套阶梯式闯关数据
+ * [OUTPUT]: PRESET_LEVELS (精选关卡库), PALETTE (马卡龙调色板), getLevelById (按关卡号获取或生成，出口强制唯一解)
+ * [POS]: 关卡题库与美学色板中心，包含 100% 复刻原图的第 24 关；getLevelById 对多解/无解盘改走强制唯一解兜底
  *
  * [自指声明]
  * 1. 一旦我被更新，必须更新本文件 Header
@@ -171,12 +171,18 @@ export function getLevelById(levelId: number): LevelData {
     level.initialTime = initialTime;
   }
 
-  if (!level.solution || level.solution.length === 0) {
-    const solved = QueensSolver.solve(level.regions);
-    if (solved.length > 0) {
-      level.solution = solved[0];
-    }
+  const solutions = QueensSolver.solve(level.regions, 2);
+  if (solutions.length === 1) {
+    level.solution = solutions[0];
+    return level;
   }
 
-  return level;
+  // 预置关或多解/无解盘：零次洪泛，直接走生成器的强制唯一解兜底
+  const repaired = LevelGenerator.generateUniqueLevel(level.id, level.size, 0);
+  repaired.initialTime = level.initialTime ?? repaired.initialTime;
+  const repairedSolutions = QueensSolver.solve(repaired.regions, 2);
+  if (repairedSolutions.length === 1) {
+    repaired.solution = repairedSolutions[0];
+  }
+  return repaired;
 }

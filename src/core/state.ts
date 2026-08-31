@@ -117,6 +117,9 @@ export class GameStateManager {
         if (this.onTimerTick) {
           this.onTimerTick(this.timeRemaining);
         }
+        if (this.timeRemaining === 0) {
+          this.handleTimeOut();
+        }
       } else {
         this.handleTimeOut();
       }

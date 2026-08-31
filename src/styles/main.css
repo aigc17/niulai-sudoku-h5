@@ -434,10 +434,10 @@ body {
   object-fit: contain;
 }
 
-/* 色盲模式浮动按钮 */
+/* 色盲模式浮动按钮 (移至顶部右上角，绝不阻挡底部工具栏) */
 .colorblind-float-btn {
   position: absolute;
-  bottom: -32px;
+  top: -6px;
   right: 0;
   display: flex;
   flex-direction: column;
@@ -470,9 +470,12 @@ body {
 
 /* ================= 底部 3D 游戏道具工具栏 ================= */
 .bottom-toolbar {
+  position: relative;
+  z-index: 50;
   margin-top: 4px;
   margin-bottom: 2px;
   flex-shrink: 0;
+  pointer-events: auto;
 }
 
 .toolbar-wrapper {
@@ -484,6 +487,7 @@ body {
   justify-content: space-around;
   align-items: flex-end;
   box-shadow: 0 4px 14px rgba(52, 73, 94, 0.08);
+  pointer-events: auto;
 }
 
 .tool-btn {
@@ -493,9 +497,11 @@ body {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0 4px;
   position: relative;
   transition: transform 0.15s ease;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 .tool-btn:active {
   transform: scale(0.92);

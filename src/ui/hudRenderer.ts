@@ -217,22 +217,26 @@ export class HudRenderer {
       </div>
     `;
 
-    // 绑定底部按钮事件
-    this.toolbarEl.querySelector('#btn-clear')?.addEventListener('click', () => {
-      gameState.clearBoard();
-    });
+    // 绑定底部按钮事件（双重保障 click 与 touchend，杜绝移动端丢事件）
+    const bindBtn = (id: string, action: () => void) => {
+      const btn = this.toolbarEl.querySelector(id) as HTMLElement | null;
+      if (!btn) return;
+      let lastTriggerTime = 0;
+      const handler = (e: Event) => {
+        const now = Date.now();
+        if (now - lastTriggerTime < 300) return; // 防重复双触
+        lastTriggerTime = now;
+        e.stopPropagation();
+        action();
+      };
+      btn.addEventListener('click', handler);
+      btn.addEventListener('touchend', handler);
+    };
 
-    this.toolbarEl.querySelector('#btn-detector')?.addEventListener('click', () => {
-      gameState.useDetectorProp();
-    });
-
-    this.toolbarEl.querySelector('#btn-hint')?.addEventListener('click', () => {
-      gameState.useHintProp();
-    });
-
-    this.toolbarEl.querySelector('#btn-coords')?.addEventListener('click', () => {
-      gameState.toggleCoordinates();
-    });
+    bindBtn('#btn-clear', () => gameState.clearBoard());
+    bindBtn('#btn-detector', () => gameState.useDetectorProp());
+    bindBtn('#btn-hint', () => gameState.useHintProp());
+    bindBtn('#btn-coords', () => gameState.toggleCoordinates());
   }
 
   /**
