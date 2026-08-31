@@ -506,6 +506,60 @@ export class GameStateManager {
     this.loadLevel(1);
   }
 
+  public isFirstLaunch: boolean = false;
+
+  /**
+   * 生成跨设备导出存档码 (Base64 安全编码)
+   */
+  public generateSaveCode(): string {
+    const payload = {
+      v: 1,
+      l: this.user.level,
+      m: this.user.maxUnlockedLevel,
+      c: this.user.coins,
+      s: this.user.streak,
+      p: this.user.props,
+      t: Date.now()
+    };
+    try {
+      const jsonStr = JSON.stringify(payload);
+      return 'NIU-' + btoa(unescape(encodeURIComponent(jsonStr)));
+    } catch {
+      return 'NIU-' + btoa(JSON.stringify(payload));
+    }
+  }
+
+  /**
+   * 导入跨设备存档码并实时恢复游戏进度
+   */
+  public importSaveCode(code: string): boolean {
+    try {
+      let raw = code.trim();
+      if (raw.startsWith('NIU-')) raw = raw.slice(4);
+      const jsonStr = decodeURIComponent(escape(atob(raw)));
+      const p = JSON.parse(jsonStr);
+
+      if (p && typeof p.l === 'number') {
+        this.user.level = Math.max(1, p.l);
+        this.user.maxUnlockedLevel = Math.max(1, p.m || p.l);
+        this.user.coins = Math.max(0, p.c || 0);
+        this.user.streak = Math.max(0, p.s || 0);
+        if (p.p) {
+          this.user.props = {
+            detector: Math.max(0, p.p.detector ?? p.p.d ?? 1),
+            hint: Math.max(0, p.p.hint ?? p.p.h ?? 1)
+          };
+        }
+        this.saveStorage();
+        this.loadLevel(this.user.level);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   private saveStorage() {
     try {
       localStorage.setItem('NIULAI_SUDOKU_USER_V2', JSON.stringify(this.user));
@@ -528,14 +582,17 @@ export class GameStateManager {
 
         soundManager.setSoundEnabled(this.user.settings.sound);
         soundManager.setHapticsEnabled(this.user.settings.haptics);
+        this.isFirstLaunch = false;
       } else {
-        // 新用户默认从第 1 关开始
+        // 新设备首次进入
         this.user.level = 1;
         this.user.maxUnlockedLevel = 1;
+        this.isFirstLaunch = true;
       }
     } catch {
       this.user.level = 1;
       this.user.maxUnlockedLevel = 1;
+      this.isFirstLaunch = false;
     }
   }
 }

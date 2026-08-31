@@ -167,7 +167,19 @@ export class ModalRenderer {
           </div>
         </div>
 
-        <button id="btn-open-guide-from-settings" class="modal-secondary-btn" style="margin-top: 16px;">
+        <!-- 跨设备存档同步 -->
+        <div class="save-sync-section">
+          <div class="select-label">☁️ 跨设备存档同步：</div>
+          <button id="btn-copy-save" class="modal-primary-btn btn-small" style="margin-bottom: 8px;">
+            📋 一键复制我的存档码
+          </button>
+          <div class="custom-jump-row">
+            <input type="text" id="input-import-save" class="custom-jump-input" placeholder="粘贴其他设备存档码 (NIU-...)" />
+            <button id="btn-import-save" class="custom-jump-btn">导入</button>
+          </div>
+        </div>
+
+        <button id="btn-open-guide-from-settings" class="modal-secondary-btn" style="margin-top: 14px;">
           📖 查看玩法攻略与排查秘籍
         </button>
       </div>
@@ -177,6 +189,35 @@ export class ModalRenderer {
     this.overlayEl.querySelector('#btn-close-settings')?.addEventListener('click', () => {
       soundManager.playButton();
       this.closeModal();
+    });
+
+    this.overlayEl.querySelector('#btn-copy-save')?.addEventListener('click', () => {
+      const code = gameState.generateSaveCode();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+          HudRenderer.showToast('✅ 存档码已复制！可在其他设备粘贴导入');
+        }).catch(() => {
+          prompt('请长按复制你的专属存档码：', code);
+        });
+      } else {
+        prompt('请长按复制你的专属存档码：', code);
+      }
+    });
+
+    this.overlayEl.querySelector('#btn-import-save')?.addEventListener('click', () => {
+      const input = this.overlayEl.querySelector('#input-import-save') as HTMLInputElement;
+      const code = input?.value || '';
+      if (!code) {
+        HudRenderer.showToast('⚠️ 请先输入或粘贴存档码！');
+        return;
+      }
+      const success = gameState.importSaveCode(code);
+      if (success) {
+        HudRenderer.showToast(`🎉 存档恢复成功！已同步至第 ${gameState.user.level} 关！`);
+        this.closeModal();
+      } else {
+        HudRenderer.showToast('❌ 存档码格式无效，请检查后重试');
+      }
     });
 
     this.overlayEl.querySelector('#btn-open-guide-from-settings')?.addEventListener('click', () => {
@@ -224,6 +265,63 @@ export class ModalRenderer {
         gameState.loadLevel(lvl);
       } else {
         HudRenderer.showToast(`第 ${lvl} 关尚未解锁，请先通过第 ${maxUnlocked} 关！`);
+      }
+    });
+  }
+
+  /**
+   * 新设备首次进入欢迎与存档导入弹窗
+   */
+  public showWelcomeModal() {
+    this.overlayEl.classList.remove('hidden');
+    this.overlayEl.innerHTML = `
+      <div class="modal-card welcome-card animate-pop">
+        <div class="lose-icon">🐮</div>
+        <h2 class="modal-title">欢迎来到牛来数独</h2>
+        <p class="modal-subtitle">检测到你是首次在此设备游玩：</p>
+
+        <div class="lose-actions-column">
+          <button id="btn-welcome-new" class="modal-primary-btn">
+            🚀 开始全新游戏 (第 1 关)
+          </button>
+          <button id="btn-welcome-show-import" class="modal-secondary-btn">
+            📥 导入已有存档码 (同步其他设备)
+          </button>
+          
+          <div id="welcome-import-box" class="welcome-import-box hidden">
+            <input type="text" id="input-welcome-save" class="custom-jump-input" placeholder="粘贴存档码 (NIU-...)" style="width: 100%; box-sizing: border-box;" />
+            <button id="btn-welcome-import-submit" class="custom-jump-btn" style="margin-top: 8px; width: 100%;">
+              立即同步进度
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.overlayEl.querySelector('#btn-welcome-new')?.addEventListener('click', () => {
+      soundManager.playButton();
+      this.closeModal();
+      HudRenderer.showToast('🎉 祝你闯关愉快！随时可在设置中备份存档');
+    });
+
+    this.overlayEl.querySelector('#btn-welcome-show-import')?.addEventListener('click', () => {
+      const box = this.overlayEl.querySelector('#welcome-import-box');
+      box?.classList.toggle('hidden');
+    });
+
+    this.overlayEl.querySelector('#btn-welcome-import-submit')?.addEventListener('click', () => {
+      const input = this.overlayEl.querySelector('#input-welcome-save') as HTMLInputElement;
+      const code = input?.value || '';
+      if (!code) {
+        HudRenderer.showToast('⚠️ 请先输入或粘贴存档码！');
+        return;
+      }
+      const success = gameState.importSaveCode(code);
+      if (success) {
+        HudRenderer.showToast(`🎉 存档恢复成功！已同步至第 ${gameState.user.level} 关！`);
+        this.closeModal();
+      } else {
+        HudRenderer.showToast('❌ 存档码格式无效，请检查后重试');
       }
     });
   }

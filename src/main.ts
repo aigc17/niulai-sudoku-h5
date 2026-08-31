@@ -84,6 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 订阅响应式状态更新
   gameState.subscribe(updateUI);
 
-  // 首次触发完整渲染
+  // 初始加载渲染
   updateUI();
+
+  // 若为新设备/新浏览器首次进入，友好弹出是否同步已有存档或开启新游戏
+  if (gameState.isFirstLaunch) {
+    modalRenderer.showWelcomeModal();
+  }
 });
