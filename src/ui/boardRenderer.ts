@@ -111,9 +111,9 @@ export class BoardRenderer {
         }
 
         // 格子内容：空 / ❌ (可爱纯白圆角叉 / 错误红叉) / 🐮 (红色牛头贴纸带弹跳放大回弹)
-        if (isError || state === CellState.CROSS) {
+        if (state === CellState.CROSS || state === CellState.ERROR_CROSS) {
           const crossEl = document.createElement('div');
-          const isRedCross = isError;
+          const isRedCross = (state === CellState.ERROR_CROSS || isError);
           crossEl.className = `cell-cross pop-in-cross ${isRedCross ? 'error-cross' : ''}`;
           crossEl.innerHTML = `
             <svg class="cute-cross-svg" viewBox="0 0 48 48" fill="none">
@@ -121,6 +121,9 @@ export class BoardRenderer {
             </svg>
           `;
           cell.appendChild(crossEl);
+          if (isRedCross) {
+            cell.classList.add('cell-error-bg');
+          }
         } else if (state === CellState.ANIMAL) {
           const animalEl = document.createElement('div');
           animalEl.className = `cell-animal ${isJustPopped ? 'bull-pop-spring' : ''}`;

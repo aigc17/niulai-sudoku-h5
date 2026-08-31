@@ -14,8 +14,9 @@
 
 export enum CellState {
   EMPTY = 0,
-  CROSS = 1,  // ❌ 标记不可放
-  ANIMAL = 2  // 🐮/🐴 放置小马/小牛
+  CROSS = 1,       // ❌ 正常白色排查叉叉
+  ANIMAL = 2,      // 🐮 放置正确的小牛
+  ERROR_CROSS = 3  // 🔴 选错时自动触发的惩罚性红色叉叉
 }
 
 export interface GridCoord {

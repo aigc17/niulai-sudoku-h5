@@ -132,8 +132,8 @@ export class GameStateManager {
   }
 
   /**
-   * 循环切换格子状态：EMPTY -> CROSS -> ANIMAL -> EMPTY (由玩家纯手动控制)
-   * 智能防呆机制：若放置牛头会造成冲突，拦截放置并立即以红色震颤叉叉反馈，绝不在界面留下多余牛头！
+   * 循环切换格子状态：EMPTY -> CROSS (白叉) -> ANIMAL (正确牛头) / ERROR_CROSS (错误红叉) -> EMPTY
+   * 严苛益智逻辑：选错绝不放牛头，直接化为红色错误叉叉 ❌，并触发报错打击反馈；选对才升起 Q 弹小牛！
    */
   public cycleCell(r: number, c: number) {
     if (this.status !== 'PLAYING') return;
@@ -143,6 +143,7 @@ export class GameStateManager {
     let next: CellState = CellState.EMPTY;
 
     if (cur === CellState.EMPTY) {
+      // 1. 空白格 -> 正常白色排查叉叉
       next = CellState.CROSS;
       this.lastPopCell = null;
       this.lastErrorCell = null;
@@ -150,23 +151,26 @@ export class GameStateManager {
       this.grid[r][c] = next;
       this.evaluateBoard();
     } else if (cur === CellState.CROSS) {
-      // 玩家希望落子为牛头：先校验是否与盘面上已有牛头发生冲突
-      const conflictReason = this.checkPlacementConflict(r, c);
-      if (conflictReason) {
-        // 发现冲突：不生成牛头，将该格置为红色错误叉叉并触发抖动反馈
+      // 2. 叉叉 -> 玩家想要放置牛头：校验是否为本关正解坐标！
+      const solution = this.currentLevel.solution || (QueensSolver.solve(this.currentLevel.regions)[0] ?? []);
+      const isCorrect = solution.some(s => s.row === r && s.col === c);
+
+      if (!isCorrect) {
+        // ❌ 选错了：坚决不生成牛头，直接变成红色错误叉叉 ❌ 并触发抖动报错与错误音效！
+        next = CellState.ERROR_CROSS;
         this.lastErrorCell = { row: r, col: c };
         this.lastPopCell = null;
         soundManager.playConflict();
-        this.notify();
+        this.grid[r][c] = next;
+        this.evaluateBoard();
         setTimeout(() => {
           if (this.lastErrorCell && this.lastErrorCell.row === r && this.lastErrorCell.col === c) {
             this.lastErrorCell = null;
             this.notify();
           }
         }, 800);
-        return;
       } else {
-        // 合法落子：成功生成牛头并触发弹跳果冻动效
+        // ✅ 选对了：成功升起可爱萌牛 🐮 并触发 Q 弹放大回弹动效！
         next = CellState.ANIMAL;
         this.lastPopCell = { row: r, col: c };
         this.lastErrorCell = null;
@@ -174,7 +178,16 @@ export class GameStateManager {
         this.grid[r][c] = next;
         this.evaluateBoard();
       }
+    } else if (cur === CellState.ERROR_CROSS) {
+      // 3. 错误红叉 -> 允许重置为空白格
+      next = CellState.EMPTY;
+      this.lastPopCell = null;
+      this.lastErrorCell = null;
+      soundManager.playTap();
+      this.grid[r][c] = next;
+      this.evaluateBoard();
     } else {
+      // 4. 正确牛头 -> 允许重置为空白格
       next = CellState.EMPTY;
       this.lastPopCell = null;
       this.lastErrorCell = null;
@@ -182,52 +195,6 @@ export class GameStateManager {
       this.grid[r][c] = next;
       this.evaluateBoard();
     }
-  }
-
-  /**
-   * 检查在 (r, c) 放置牛头是否会破坏当前公理约束
-   */
-  private checkPlacementConflict(r: number, c: number): string | null {
-    const size = this.currentLevel.size;
-    const targetRegion = this.currentLevel.regions[r][c];
-
-    // 1. 同行检查
-    for (let j = 0; j < size; j++) {
-      if (j !== c && this.grid[r][j] === CellState.ANIMAL) {
-        return `第 ${r + 1} 行已有牛头`;
-      }
-    }
-
-    // 2. 同列检查
-    for (let i = 0; i < size; i++) {
-      if (i !== r && this.grid[i][c] === CellState.ANIMAL) {
-        return `第 ${c + 1} 列已有牛头`;
-      }
-    }
-
-    // 3. 同一颜色区域检查
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        if ((i !== r || j !== c) && this.currentLevel.regions[i][j] === targetRegion && this.grid[i][j] === CellState.ANIMAL) {
-          return `该颜色区域已有牛头`;
-        }
-      }
-    }
-
-    // 4. 周围 8 邻域检查
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        if (dr === 0 && dc === 0) continue;
-        const nr = r + dr, nc = c + dc;
-        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-          if (this.grid[nr][nc] === CellState.ANIMAL) {
-            return `牛头周围不能相邻`;
-          }
-        }
-      }
-    }
-
-    return null;
   }
 
   /**
