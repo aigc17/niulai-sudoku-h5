@@ -46,21 +46,22 @@ body {
 
 .game-container {
   width: 100%;
-  max-width: 480px;
+  max-width: 440px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: calc(var(--safe-top) + 16px) 16px var(--safe-bottom) 16px;
-  background: var(--bg-color);
+  padding: max(22px, env(safe-area-inset-top, 22px)) 16px max(24px, env(safe-area-inset-bottom, 24px)) 16px;
+  background: #EAF2F8;
   position: relative;
+  box-sizing: border-box;
 }
 
 /* ================= 顶部 HUD ================= */
 .hud-header {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .hud-top-row {
@@ -75,31 +76,46 @@ body {
   gap: 8px;
 }
 
-.icon-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--primary-color);
+.game-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1.5px solid #D6E4EC;
+  color: #34495E;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08);
   cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.game-icon-btn:active {
+  transform: scale(0.92);
+  background: #F2F7FA;
+}
+.hud-svg-icon {
+  width: 20px;
+  height: 20px;
 }
 
-.resource-badge, .streak-badge {
-  display: flex;
+.coin-badge {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--card-bg);
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dark);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: #FFFFFF;
+  border: 1.5px solid #F5CBA7;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 3px 8px rgba(243, 156, 18, 0.12);
 }
-
-.badge-label {
-  color: var(--text-gray);
-  font-size: 12px;
+.coin-icon {
+  font-size: 15px;
+}
+.badge-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #D35400;
 }
 
 .hud-center-group {
@@ -107,96 +123,119 @@ body {
 }
 
 .level-title-btn {
-  background: none;
-  border: none;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-dark);
+  background: #FFFFFF;
+  border: 1.5px solid #D6E4EC;
+  border-radius: 20px;
+  padding: 5px 14px;
+  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  transition: transform 0.15s ease;
 }
-
+.level-title-btn:active {
+  transform: scale(0.95);
+}
+.level-title-text {
+  font-size: 15px;
+  font-weight: 900;
+  color: #2C3E50;
+  letter-spacing: 0.5px;
+}
 .level-arrow {
   font-size: 12px;
-  color: var(--text-gray);
+  color: #7F8C8D;
 }
 
-.quick-reset-btn {
-  background: var(--card-bg);
-  border: none;
-  color: var(--text-red);
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FFFFFF;
+  border: 1.5px solid #F9E79F;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 3px 8px rgba(241, 196, 15, 0.15);
+}
+.trophy-icon {
+  font-size: 14px;
+}
+.streak-text {
   font-size: 13px;
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  font-weight: 800;
+  color: #B7950B;
 }
 
 .hud-status-row {
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .status-pill {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--card-bg);
-  padding: 8px 16px;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-dark);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: #FFFFFF;
+  border: 1.5px solid #D6E4EC;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2C3E50;
+  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.06);
 }
 
 .pill-label {
-  color: var(--text-gray);
-  font-size: 13px;
+  color: #7F8C8D;
+  font-size: 12px;
 }
 
 .highlight-red {
-  color: var(--text-red);
-  font-weight: 600;
+  color: #E74C3C;
+  font-size: 15px;
+  font-weight: 800;
 }
 
 /* ================= 规则胶囊 ================= */
 .rules-card-container {
   display: flex;
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 12px;
-  margin: 12px 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: #FFFFFF;
+  border: 1.5px solid #D6E4EC;
+  border-radius: 16px;
+  padding: 8px 6px;
+  box-shadow: 0 4px 12px rgba(44, 62, 80, 0.06);
 }
 
 .rule-card {
   flex: 1;
   text-align: center;
-  border-right: 1px solid #E5E5EA;
-  padding: 0 4px;
+  padding: 2px 4px;
+  position: relative;
 }
 
-.rule-card:last-child {
-  border-right: none;
+.rule-card:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background-color: #E2EDF3;
 }
 
 .rule-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-dark);
-  line-height: 1.2;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2C3E50;
 }
 
 .rule-sub {
-  font-size: 12px;
-  color: var(--text-gray);
-  margin-top: 4px;
+  font-size: 10px;
+  color: #7F8C8D;
+  margin-top: 1px;
 }
 
 /* ================= 主棋盘区域 ================= */
@@ -367,69 +406,55 @@ body {
   object-fit: contain;
 }
 
-/* 顶部交互按钮样式 */
-.level-title-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  font-weight: 800;
-  color: #2C3E50;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.level-arrow {
-  font-size: 12px;
-  color: #7F8C8D;
-}
-
-.quick-reset-btn {
-  background: #E8F4F8;
-  border: 1px solid #BEE1F1;
-  color: #2980B9;
-  font-size: 11px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
 /* 色盲模式浮动按钮 */
 .colorblind-float-btn {
   position: absolute;
-  bottom: -36px;
+  bottom: -32px;
   right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  z-index: 10;
+  transition: transform 0.15s ease;
+}
+.colorblind-float-btn:active {
+  transform: scale(0.92);
 }
 
 .cb-icon {
-  font-size: 16px;
-  background: var(--card-bg);
+  font-size: 13px;
+  font-weight: 800;
+  background: #FFFFFF;
+  border: 1.5px solid #D6E4EC;
   border-radius: 8px;
-  padding: 4px 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  padding: 3px 6px;
+  box-shadow: 0 2px 6px rgba(44, 62, 80, 0.08);
+  color: #34495E;
 }
 
 .cb-text {
-  font-size: 11px;
-  color: var(--primary-color);
-  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #7F8C8D;
+  margin-top: 2px;
 }
 
-/* ================= 底部工具栏 ================= */
+/* ================= 底部 3D 游戏道具工具栏 ================= */
 .bottom-toolbar {
-  margin-top: 16px;
+  margin-top: 8px;
+  margin-bottom: 2px;
 }
 
 .toolbar-wrapper {
+  background: #FFFFFF;
+  border: 2px solid #D6E4EC;
+  border-radius: 24px;
+  padding: 8px 12px 6px 12px;
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-end;
+  box-shadow: 0 8px 24px rgba(52, 73, 94, 0.08);
 }
 
 .tool-btn {
@@ -439,61 +464,94 @@ body {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  padding: 0 4px;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+.tool-btn:active {
+  transform: scale(0.92);
 }
 
-.tool-icon {
-  font-size: 24px;
-}
-
-.tool-name {
-  font-size: 12px;
-  color: var(--text-gray);
-  margin-top: 6px;
-}
-
-.action-coords.active .tool-name {
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
-.prop-card {
-  background: var(--card-bg);
+.tool-icon-wrapper {
+  width: 44px;
+  height: 44px;
   border-radius: 14px;
-  width: 60px;
-  height: 60px;
+  background: #F4F8FA;
+  border: 1.5px solid #DCE9F0;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #7F8C8D;
+  transition: all 0.2s ease;
+}
+
+.tool-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.action-coords.active .tool-icon-wrapper {
+  background: #E8F8F5;
+  border-color: #2ECC71;
+  color: #27AE60;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+}
+
+.prop-card-3d {
+  width: 46px;
+  height: 46px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 2px solid #E2EDF3;
+  box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
+  display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.prop-text-icon {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--primary-color);
+.prop-bull-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
-.prop-badge {
+.prop-lightbulb-svg {
+  width: 26px;
+  height: 26px;
+}
+
+.prop-badge-pill {
   position: absolute;
   top: -6px;
   right: -6px;
-  background: var(--primary-color);
-  color: #FFF;
+  background: #2980B9;
+  color: #FFFFFF;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 900;
   min-width: 18px;
   height: 18px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
   padding: 0 4px;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-.badge-plus {
-  background: #34C759;
+.prop-badge-pill.badge-green {
+  background: #27AE60;
+}
+
+.tool-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7F8C8D;
+  margin-top: 4px;
+}
+.action-coords.active .tool-label {
+  color: #27AE60;
 }
 
 .prop-btn.disabled {

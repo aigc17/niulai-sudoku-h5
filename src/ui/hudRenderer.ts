@@ -50,25 +50,35 @@ export class HudRenderer {
     this.headerEl.innerHTML = `
       <div class="hud-top-row">
         <div class="hud-left-group">
-          <button id="btn-settings" class="icon-btn" aria-label="设置" title="游戏设置">设置</button>
+          <button id="btn-settings" class="game-icon-btn settings-btn" aria-label="设置" title="游戏设置">
+            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
           <div class="resource-badge coin-badge">
-            <span class="badge-label">金币</span>
+            <span class="coin-icon">🪙</span>
             <span class="badge-val">${user.coins}</span>
           </div>
         </div>
 
         <div class="hud-center-group">
           <button id="btn-level-title" class="level-title-btn" title="点击选关">
-            第${user.level}关 <span class="level-arrow">▾</span>
+            <span class="level-title-text">第${user.level}关</span>
+            <span class="level-arrow">▾</span>
           </button>
         </div>
 
         <div class="hud-right-group">
           <div class="streak-badge">
-            <span class="streak-text">连胜: ${user.streak}</span>
+            <span class="trophy-icon">🏆</span>
+            <span class="streak-text">${user.streak}</span>
           </div>
-          <button id="btn-reset-l1" class="quick-reset-btn" title="回到第 1 关">
-            重置
+          <button id="btn-reset-l1" class="game-icon-btn reset-btn" title="重置本关">
+            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
           </button>
         </div>
       </div>
@@ -101,7 +111,7 @@ export class HudRenderer {
 
     this.headerEl.querySelector('#btn-reset-l1')?.addEventListener('click', () => {
       soundManager.playButton();
-      gameState.resetProgress();
+      gameState.clearBoard();
     });
   }
 
@@ -137,31 +147,49 @@ export class HudRenderer {
     this.toolbarEl.innerHTML = `
       <div class="toolbar-wrapper">
         <!-- 清除/重置 -->
-        <button id="btn-clear" class="tool-btn action-clear">
-          <div class="tool-name">清除</div>
+        <button id="btn-clear" class="tool-btn action-clear" title="清空全部标记">
+          <div class="tool-icon-wrapper">
+            <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </div>
+          <span class="tool-label">清除</span>
         </button>
 
-        <!-- 放大镜/探照道具 -->
-        <button id="btn-detector" class="tool-btn prop-btn ${user.props.detector <= 0 ? 'disabled' : ''}">
-          <div class="prop-card">
-            <span class="prop-text-icon">探照</span>
-            <div class="prop-badge">${user.props.detector}</div>
+        <!-- 探照/牛头探照道具 -->
+        <button id="btn-detector" class="tool-btn prop-btn ${user.props.detector <= 0 ? 'disabled' : ''}" title="探照：随机排除一个不可能的格子">
+          <div class="prop-card-3d">
+            <img src="/bull.png" class="prop-bull-icon" alt="探照" />
+            <div class="prop-badge-pill">${user.props.detector}</div>
           </div>
+          <span class="tool-label">探照</span>
         </button>
 
-        <!-- 提示/灯泡道具 -->
-        <button id="btn-hint" class="tool-btn prop-btn ${user.props.hint <= 0 ? 'disabled' : ''}">
-          <div class="prop-card">
-            <span class="prop-text-icon">提示</span>
-            <div class="prop-badge ${user.props.hint <= 0 ? 'badge-plus' : ''}">
-              ${user.props.hint > 0 ? user.props.hint : '+'}
-            </div>
+        <!-- 提示/神奇灯泡道具 -->
+        <button id="btn-hint" class="tool-btn prop-btn ${user.props.hint <= 0 ? 'disabled' : ''}" title="提示：直接找出一个小牛的正确位置">
+          <div class="prop-card-3d">
+            <svg class="prop-lightbulb-svg" viewBox="0 0 24 24" fill="none" stroke="#F39C12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6"></path>
+              <path d="M10 22h4"></path>
+              <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
+            </svg>
+            <div class="prop-badge-pill badge-green">${user.props.hint > 0 ? user.props.hint : '+'}</div>
           </div>
+          <span class="tool-label">提示</span>
         </button>
 
         <!-- 坐标开关 -->
-        <button id="btn-coords" class="tool-btn action-coords ${hasCoordinates ? 'active' : ''}">
-          <div class="tool-name">坐标</div>
+        <button id="btn-coords" class="tool-btn action-coords ${hasCoordinates ? 'active' : ''}" title="开启/关闭棋盘行列坐标">
+          <div class="tool-icon-wrapper">
+            <svg class="tool-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+          <span class="tool-label">坐标</span>
         </button>
       </div>
     `;
