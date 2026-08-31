@@ -30,7 +30,7 @@ export const PALETTE: PaletteColor[] = [
 ];
 
 export const PRESET_LEVELS: Record<number, LevelData> = {
-  // 第 1 关：视频教学同款 (Tutorial - 4x4，单格多米诺极速突破)
+  // 第 1 关：视频教学同款 (Tutorial - 4x4，单格橙色多米诺极速突破)
   1: {
     id: 1,
     size: 4,
@@ -44,13 +44,13 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
       { row: 3, col: 2 }
     ],
     regions: [
-      [2, 0, 1, 1],
+      [2, 0, 1, 1], // (0, 1) 为独立单格 Region 0，一眼锁定必放牛！
       [2, 3, 1, 1],
       [2, 3, 1, 1],
       [2, 3, 3, 3]
     ]
   },
-  // 第 2 关：4x4 基础排查巩固
+  // 第 2 关：4x4 极度友好教学 (右上角 (1, 3) 独立单色单格突破口)
   2: {
     id: 2,
     size: 4,
@@ -64,13 +64,13 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
       { row: 3, col: 2 }
     ],
     regions: [
-      [0, 0, 1, 1],
-      [0, 0, 3, 1],
-      [2, 2, 3, 1],
+      [1, 1, 1, 1],
+      [2, 3, 3, 0], // (1, 3) 为独立单格 Region 0，一眼锁定必放牛！
+      [2, 2, 3, 3],
       [2, 2, 3, 3]
     ]
   },
-  // 第 3 关：4x4 进阶连通排查
+  // 第 3 关：4x4 进阶巩固 (左下角 (2, 0) 独立单色单格突破口)
   3: {
     id: 3,
     size: 4,
@@ -84,10 +84,10 @@ export const PRESET_LEVELS: Record<number, LevelData> = {
       { row: 3, col: 2 }
     ],
     regions: [
-      [0, 0, 1, 1],
-      [2, 0, 1, 1],
-      [2, 2, 3, 1],
-      [2, 2, 3, 3]
+      [1, 1, 2, 2],
+      [1, 1, 2, 2],
+      [0, 3, 3, 2], // (2, 0) 为独立单格 Region 0，一眼锁定必放牛！
+      [3, 3, 3, 3]
     ]
   },
   // 第 10 关：5x5 进阶探索 (经 CSP 严格验证 100% 唯一解)
