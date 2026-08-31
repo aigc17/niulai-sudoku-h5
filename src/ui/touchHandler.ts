@@ -33,11 +33,11 @@ export class TouchHandler {
   }
 
   private bindEvents() {
-    // 阻止移动端橡皮筋滚动，实现极致跟手的连划排查
+    // 容器监听触控起始，全局 window 监听持续滑动与抬起（确保高速划线 0 丢帧）
     this.container.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
-    this.container.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-    this.container.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
-    this.container.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
+    window.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+    window.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+    window.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
 
     // 鼠标桌面端兼容
     this.container.addEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -46,7 +46,7 @@ export class TouchHandler {
   }
 
   private getCellFromPoint(clientX: number, clientY: number): { row: number; col: number } | null {
-    // 1. DOM 树向上回溯快速查询
+    // 1. DOM 树快速命中
     const el = document.elementFromPoint(clientX, clientY);
     if (el) {
       const cellEl = el.closest('.board-cell') as HTMLElement | null;
@@ -58,7 +58,7 @@ export class TouchHandler {
       }
     }
 
-    // 2. 物理几何坐标双重兜底（即使高速滑过格子间隙或 SVG 遮罩层也能 100% 捕获）
+    // 2. 物理几何坐标兜底（连线解锁般 100% 极速定位）
     const gridEl = this.container.querySelector('.board-grid') as HTMLElement;
     if (!gridEl) return null;
     const rect = gridEl.getBoundingClientRect();
@@ -91,12 +91,10 @@ export class TouchHandler {
     this.touchedCells.add(`${cell.row},${cell.col}`);
 
     const curState = gameState.grid[cell.row][cell.col];
-    if (curState === CellState.EMPTY) {
+    if (curState === CellState.EMPTY || curState === CellState.ANIMAL) {
       this.dragMode = CellState.CROSS; // 滑动模式：一划批量打叉 ❌
     } else if (curState === CellState.CROSS || curState === CellState.ERROR_CROSS) {
       this.dragMode = CellState.EMPTY; // 滑动模式：一划批量擦除叉叉
-    } else {
-      this.dragMode = null; // 牛头不参与连续擦除
     }
   }
 
@@ -104,10 +102,10 @@ export class TouchHandler {
     if (!this.isPointerDown || !this.startPoint || !this.startCell) return;
 
     const dist = Math.hypot(clientX - this.startPoint.x, clientY - this.startPoint.y);
-    if (dist > 7) {
+    if (dist > 5) {
       if (!this.isDragging) {
         this.isDragging = true;
-        // 进入滑动状态：立即对起始格子生效连划
+        // 进入连线解锁式滑动状态：立即对起始格子生效
         if (this.dragMode !== null && gameState.grid[this.startCell.row][this.startCell.col] !== CellState.ANIMAL) {
           gameState.setCellState(this.startCell.row, this.startCell.col, this.dragMode);
         }

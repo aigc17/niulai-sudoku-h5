@@ -19,15 +19,33 @@ import { gameState } from '../core/state';
 
 export class BoardRenderer {
   private container: HTMLElement;
+  private currentGridSettingsKey: string = '';
+  private cellElements: HTMLElement[][] = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
   }
 
   /**
-   * 完整渲染整个棋盘网格与坐标系
+   * 渲染或增量更新棋盘网格（DOM 节点持久保留，保障移动端连续滑动手势 100% 顺畅连贯）
    */
   public render() {
+    const level = gameState.currentLevel;
+    const size = level.size;
+    const isColorblind = gameState.user.settings.colorblind;
+    const showCoordinates = gameState.user.settings.coordinates;
+    const settingsKey = `${level.id}_${size}_${isColorblind}_${showCoordinates}`;
+
+    // 仅在关卡或布局结构变化时重建 DOM；否则执行毫秒级就地增量更新！
+    if (settingsKey !== this.currentGridSettingsKey) {
+      this.currentGridSettingsKey = settingsKey;
+      this.buildGridDOM();
+    } else {
+      this.updateCellsInPlace();
+    }
+  }
+
+  private buildGridDOM() {
     const level = gameState.currentLevel;
     const size = level.size;
     const isColorblind = gameState.user.settings.colorblind;
@@ -35,12 +53,7 @@ export class BoardRenderer {
 
     this.container.innerHTML = '';
     this.container.style.setProperty('--grid-size', size.toString());
-
-    // 冲突坐标集合
-    const conflictSet = new Set<string>();
-    gameState.conflicts.forEach(c => {
-      c.coords.forEach(p => conflictSet.add(`${p.row},${p.col}`));
-    });
+    this.cellElements = Array.from({ length: size }, () => []);
 
     const gridEl = document.createElement('div');
     gridEl.className = `board-grid ${showCoordinates ? 'with-coordinates' : ''}`;
@@ -81,27 +94,16 @@ export class BoardRenderer {
         const cell = document.createElement('div');
         const regionId = level.regions[r][c];
         const color = PALETTE[regionId % PALETTE.length];
-        const state = gameState.grid[r][c];
-        const isConflict = conflictSet.has(`${r},${c}`);
 
         cell.className = 'board-cell';
         cell.dataset.row = r.toString();
         cell.dataset.col = c.toString();
         cell.style.backgroundColor = color.bg;
 
-        // 计算当前格子与周围区域的边界连通性
+        // 计算边界隔断
         this.applyRegionBorders(cell, r, c, level.regions, size);
 
-        const isError = gameState.lastErrorCell && gameState.lastErrorCell.row === r && gameState.lastErrorCell.col === c;
-
-        if (isConflict) {
-          cell.classList.add('cell-conflict');
-        }
-        if (isError) {
-          cell.classList.add('cell-error-shake');
-        }
-
-        // 色盲模式几何符号水印
+        // 色盲模式水印
         if (isColorblind) {
           const symEl = document.createElement('span');
           symEl.className = 'cell-symbol';
@@ -109,34 +111,89 @@ export class BoardRenderer {
           cell.appendChild(symEl);
         }
 
-        // 格子内容：空 / ❌ (可爱纯白圆角叉 / 错误红叉) / 🐮 (红色牛头贴纸带弹跳放大回弹)
-        if (state === CellState.CROSS || state === CellState.ERROR_CROSS) {
-          const crossEl = document.createElement('div');
-          const isRedCross = (state === CellState.ERROR_CROSS || isError);
-          crossEl.className = `cell-cross pop-in-cross ${isRedCross ? 'error-cross' : ''}`;
-          crossEl.innerHTML = `
-            <svg class="cute-cross-svg" viewBox="0 0 48 48" fill="none">
-              <path d="M14 14 L34 34 M34 14 L14 34" stroke="${isRedCross ? '#E74C3C' : '#FFFFFF'}" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          `;
-          cell.appendChild(crossEl);
-          if (isRedCross) {
-            cell.classList.add('cell-error-bg');
-          }
-        } else if (state === CellState.ANIMAL) {
-          const isJustPopped = gameState.lastPopCell && gameState.lastPopCell.row === r && gameState.lastPopCell.col === c;
-          const animalEl = document.createElement('div');
-          animalEl.className = `cell-animal ${isJustPopped ? 'bull-jump-pop' : ''}`;
-          animalEl.innerHTML = `<img src="/bull.png" class="bull-sticker-img" alt="牛头" />`;
-          cell.appendChild(animalEl);
-        }
+        // 内容插槽容器
+        const contentSlot = document.createElement('div');
+        contentSlot.className = 'cell-content-slot';
+        cell.appendChild(contentSlot);
 
         gridEl.appendChild(cell);
+        this.cellElements[r][c] = cell;
       }
     }
 
     mainArea.appendChild(gridEl);
     this.container.appendChild(mainArea);
+
+    // 填充初始内容状态
+    this.updateCellsInPlace();
+  }
+
+  private updateCellsInPlace() {
+    const size = gameState.currentLevel.size;
+    const conflictSet = new Set<string>();
+    gameState.conflicts.forEach(c => {
+      c.coords.forEach(p => conflictSet.add(`${p.row},${p.col}`));
+    });
+
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const cell = this.cellElements[r]?.[c];
+        if (!cell) continue;
+
+        const state = gameState.grid[r][c];
+        const isConflict = conflictSet.has(`${r},${c}`);
+        const isError = gameState.lastErrorCell && gameState.lastErrorCell.row === r && gameState.lastErrorCell.col === c;
+
+        // 更新冲突样式
+        if (isConflict) {
+          cell.classList.add('cell-conflict');
+        } else {
+          cell.classList.remove('cell-conflict');
+        }
+
+        if (isError) {
+          cell.classList.add('cell-error-shake');
+        } else {
+          cell.classList.remove('cell-error-shake');
+        }
+
+        const slot = cell.querySelector('.cell-content-slot') || cell;
+        const currentType = slot.getAttribute('data-state');
+        const nextType = `${state}_${isError}`;
+
+        if (currentType !== nextType) {
+          slot.setAttribute('data-state', nextType);
+          slot.innerHTML = '';
+
+          if (state === CellState.CROSS || state === CellState.ERROR_CROSS) {
+            const isRedCross = (state === CellState.ERROR_CROSS || isError);
+            slot.innerHTML = `
+              <div class="cell-cross pop-in-cross ${isRedCross ? 'error-cross' : ''}">
+                <svg class="cute-cross-svg" viewBox="0 0 48 48" fill="none">
+                  <path d="M14 14 L34 34 M34 14 L14 34" stroke="${isRedCross ? '#E74C3C' : '#FFFFFF'}" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            `;
+            if (isRedCross) {
+              cell.classList.add('cell-error-bg');
+            } else {
+              cell.classList.remove('cell-error-bg');
+            }
+          } else if (state === CellState.ANIMAL) {
+            cell.classList.remove('cell-error-bg');
+            const isJustPopped = gameState.lastPopCell && gameState.lastPopCell.row === r && gameState.lastPopCell.col === c;
+            slot.innerHTML = `
+              <div class="cell-animal ${isJustPopped ? 'bull-jump-pop' : ''}">
+                <img src="/bull.png" class="bull-sticker-img" alt="牛头" />
+              </div>
+            `;
+          } else {
+            cell.classList.remove('cell-error-bg');
+            slot.innerHTML = '';
+          }
+        }
+      }
+    }
   }
 
   /**
