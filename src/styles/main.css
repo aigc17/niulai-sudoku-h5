@@ -590,24 +590,29 @@ button, input, select, textarea,
   right: -5px;
   background: #2980B9;
   color: #FFFFFF;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 3px;
+  padding: 0;
   border: 1.5px solid #FFFFFF;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  line-height: 1;
+  box-sizing: border-box;
 }
 
-.prop-badge-pill.badge-green {
-  background: #27AE60;
-}
-.prop-badge-pill.badge-orange {
-  background: #E67E22;
+.prop-badge-pill.badge-green { background: #27AE60; }
+.prop-badge-pill.badge-orange { background: #E67E22; }
+
+.badge-plus-svg {
+  width: 9px;
+  height: 9px;
+  display: block;
 }
 
 .tool-label {

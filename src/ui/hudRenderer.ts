@@ -181,7 +181,14 @@ export class HudRenderer {
               <path d="M10 22h4"></path>
               <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
             </svg>
-            <div class="prop-badge-pill ${user.props.hint > 0 ? 'badge-green' : 'badge-orange'}">${isLevelMaxReached ? '0' : (user.props.hint > 0 ? user.props.hint : '+')}</div>
+            <div class="prop-badge-pill ${user.props.hint > 0 ? 'badge-green' : 'badge-orange'}">
+              ${isLevelMaxReached ? '0' : (user.props.hint > 0 ? user.props.hint : `
+                <svg class="badge-plus-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              `)}
+            </div>
           </div>
           <span class="tool-label">提示</span>
         </button>
