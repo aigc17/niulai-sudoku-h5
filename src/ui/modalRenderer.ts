@@ -166,6 +166,10 @@ export class ModalRenderer {
             <button id="btn-custom-jump" class="custom-jump-btn">前往</button>
           </div>
         </div>
+
+        <button id="btn-open-guide-from-settings" class="modal-secondary-btn" style="margin-top: 16px;">
+          📖 查看玩法攻略与排查秘籍
+        </button>
       </div>
     `;
 
@@ -173,6 +177,11 @@ export class ModalRenderer {
     this.overlayEl.querySelector('#btn-close-settings')?.addEventListener('click', () => {
       soundManager.playButton();
       this.closeModal();
+    });
+
+    this.overlayEl.querySelector('#btn-open-guide-from-settings')?.addEventListener('click', () => {
+      soundManager.playButton();
+      this.showGuideModal();
     });
 
     this.overlayEl.querySelector('#chk-sound')?.addEventListener('change', () => {
@@ -217,6 +226,66 @@ export class ModalRenderer {
         HudRenderer.showToast(`第 ${lvl} 关尚未解锁，请先通过第 ${maxUnlocked} 关！`);
       }
     });
+  }
+
+  /**
+   * 玩法攻略与破局秘籍弹窗
+   */
+  public showGuideModal() {
+    this.overlayEl.classList.remove('hidden');
+    this.overlayEl.innerHTML = `
+      <div class="modal-card guide-card animate-pop">
+        <div class="modal-header">
+          <h2 class="modal-title">📖 玩法攻略与秘籍</h2>
+          <button id="btn-close-guide" class="modal-close-x">关闭</button>
+        </div>
+
+        <div class="guide-scroll-body">
+          <div class="guide-section">
+            <h3 class="guide-sec-title">👑 核心三大公理</h3>
+            <ul class="guide-list">
+              <li><b>① 颜色唯一</b>：每个同色区域内，只能放 <b>1 头牛 🐮</b>。</li>
+              <li><b>② 行列唯一</b>：每 1 横行、每 1 竖列，只能放 <b>1 头牛 🐮</b>。</li>
+              <li><b>③ 八向互斥</b>：两头牛四周 8 格（含 4 斜角）<b>绝不能碰面 ❌</b>。</li>
+            </ul>
+          </div>
+
+          <div class="guide-section">
+            <h3 class="guide-sec-title">💡 四大进阶破局绝技</h3>
+            <div class="guide-tip-card">
+              <div class="tip-title">🎯 技巧 1：孤岛单格锁定法 (首选破局)</div>
+              <div class="tip-desc">观察全盘，若某种颜色<b>全图仅有 1 个格子</b>，则此处 <b>100% 必放牛</b>！落下即可触发多米诺连环效应！</div>
+            </div>
+
+            <div class="guide-tip-card">
+              <div class="tip-title">⚡ 技巧 2：十字光线排除法 (落子即排查)</div>
+              <div class="tip-desc">只要成功落下一头牛，立刻滑动将其所在<b>整行、整列及四周 8 格全部打 ❌</b>，瞬间清空无效区域。</div>
+            </div>
+
+            <div class="guide-tip-card">
+              <div class="tip-title">🔒 技巧 3：狭管双格封锁法 (高阶推演)</div>
+              <div class="tip-desc">若某种颜色的所有可用格子<b>全部挤在同一行（或同一列）</b>，则该行其他非同色格子绝不能有牛，可提前打 ❌ 排除！</div>
+            </div>
+
+            <div class="guide-tip-card">
+              <div class="tip-title">📐 技巧 4：拐角孤立挤压法 (大师解题)</div>
+              <div class="tip-desc">棋盘角落与边缘易受多重排除挤压，常为打破僵局的第二关键落子点。</div>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-know-guide" class="modal-primary-btn" style="margin-top: 12px;">
+          我学会了，立即实战！
+        </button>
+      </div>
+    `;
+
+    const close = () => {
+      soundManager.playButton();
+      this.closeModal();
+    };
+    this.overlayEl.querySelector('#btn-close-guide')?.addEventListener('click', close);
+    this.overlayEl.querySelector('#btn-know-guide')?.addEventListener('click', close);
   }
 
   /**

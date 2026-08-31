@@ -20,17 +20,20 @@ export class HudRenderer {
   private bannerEl: HTMLElement;
   private toolbarEl: HTMLElement;
   private onOpenSettings: () => void;
+  private onOpenGuide: () => void;
 
   constructor(
     headerEl: HTMLElement,
     bannerEl: HTMLElement,
     toolbarEl: HTMLElement,
-    onOpenSettings: () => void
+    onOpenSettings: () => void,
+    onOpenGuide: () => void
   ) {
     this.headerEl = headerEl;
     this.bannerEl = bannerEl;
     this.toolbarEl = toolbarEl;
     this.onOpenSettings = onOpenSettings;
+    this.onOpenGuide = onOpenGuide;
   }
 
   public render() {
@@ -40,7 +43,7 @@ export class HudRenderer {
   }
 
   /**
-   * 渲染顶部资源、关卡、心心与倒计时状态栏 (100% 还原截图)
+   * 渲染顶部资源、关卡、攻略与倒计时状态栏
    */
   public renderHeader() {
     const user = gameState.user;
@@ -54,6 +57,12 @@ export class HudRenderer {
             <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+          <button id="btn-guide" class="game-icon-btn guide-btn" aria-label="攻略" title="玩法攻略与破局技巧">
+            <svg class="hud-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
           </button>
           <div class="resource-badge coin-badge">
@@ -97,10 +106,15 @@ export class HudRenderer {
       </div>
     `;
 
-    // 绑定设置按钮与选关按钮
+    // 绑定设置按钮、攻略按钮与选关按钮
     this.headerEl.querySelector('#btn-settings')?.addEventListener('click', () => {
       soundManager.playButton();
       this.onOpenSettings();
+    });
+
+    this.headerEl.querySelector('#btn-guide')?.addEventListener('click', () => {
+      soundManager.playButton();
+      this.onOpenGuide();
     });
 
     this.headerEl.querySelector('#btn-level-title')?.addEventListener('click', () => {

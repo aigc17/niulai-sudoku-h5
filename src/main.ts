@@ -30,9 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 1. 初始化各子系统渲染器
   const modalRenderer = new ModalRenderer(modalOverlayEl);
-  const hudRenderer = new HudRenderer(headerEl, bannerEl, toolbarEl, () => {
-    modalRenderer.showSettingsModal();
-  });
+  const hudRenderer = new HudRenderer(
+    headerEl,
+    bannerEl,
+    toolbarEl,
+    () => modalRenderer.showSettingsModal(),
+    () => modalRenderer.showGuideModal()
+  );
   const boardRenderer = new BoardRenderer(boardEl);
   new TouchHandler(boardEl);
 

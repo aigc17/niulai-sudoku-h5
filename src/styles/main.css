@@ -784,3 +784,12 @@ body {
   background: #E2EDF3;
   color: #7F8C8D;
 }
+
+/* ================= 玩法攻略弹窗 ================= */
+.guide-card { max-width: 360px; max-height: 85vh; display: flex; flex-direction: column; }
+.guide-scroll-body { overflow-y: auto; text-align: left; padding-right: 4px; display: flex; flex-direction: column; gap: 10px; }
+.guide-sec-title { font-size: 13px; font-weight: 800; color: #2C3E50; margin-bottom: 4px; }
+.guide-list { list-style: none; padding-left: 0; font-size: 12px; line-height: 1.5; color: #34495E; }
+.guide-tip-card { background: #F4F8FA; border: 1px solid #DCE9F0; border-radius: 10px; padding: 6px 10px; margin-bottom: 6px; }
+.tip-title { font-size: 12px; font-weight: 800; color: #2980B9; margin-bottom: 2px; }
+.tip-desc { font-size: 11px; color: #555; line-height: 1.4; }
