@@ -32,6 +32,12 @@
   -webkit-touch-callout: none;
 }
 
+html, body {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
   background-color: var(--bg-color);
@@ -39,113 +45,123 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 .game-container {
   width: 100%;
   max-width: 440px;
-  height: 100vh;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: max(22px, env(safe-area-inset-top, 22px)) 16px max(24px, env(safe-area-inset-bottom, 24px)) 16px;
+  padding: max(6px, env(safe-area-inset-top, 6px)) 12px max(8px, env(safe-area-inset-bottom, 8px)) 12px;
   background: #EAF2F8;
   position: relative;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* ================= 顶部 HUD ================= */
-.hud-header { display: flex; flex-direction: column; gap: 10px; }
+.hud-header { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
 .hud-top-row { display: flex; justify-content: space-between; align-items: center; }
-.hud-left-group, .hud-right-group { display: flex; align-items: center; gap: 8px; }
+.hud-left-group, .hud-right-group { display: flex; align-items: center; gap: 6px; }
 
 .game-icon-btn {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: #FFFFFF; border: 1.5px solid #D6E4EC; color: #34495E;
   display: inline-flex; align-items: center; justify-content: center;
-  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08); cursor: pointer;
+  box-shadow: 0 2px 6px rgba(44, 62, 80, 0.08); cursor: pointer;
   transition: transform 0.15s ease, background 0.15s ease;
 }
 .game-icon-btn:active { transform: scale(0.92); background: #F2F7FA; }
-.hud-svg-icon { width: 20px; height: 20px; }
+.hud-svg-icon { width: 18px; height: 18px; }
 
 .coin-badge {
   display: inline-flex; align-items: center; gap: 4px; background: #FFFFFF;
-  border: 1.5px solid #F5CBA7; padding: 4px 10px; border-radius: 20px;
-  box-shadow: 0 3px 8px rgba(243, 156, 18, 0.12);
+  border: 1.5px solid #F5CBA7; padding: 3px 8px; border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(243, 156, 18, 0.12);
 }
-.coin-icon { font-size: 15px; }
-.badge-val { font-size: 13px; font-weight: 800; color: #D35400; }
+.coin-icon { font-size: 14px; }
+.badge-val { font-size: 12px; font-weight: 800; color: #D35400; }
 
 .hud-center-group { text-align: center; }
 
 .level-title-btn {
   background: #FFFFFF; border: 1.5px solid #D6E4EC; border-radius: 20px;
-  padding: 5px 14px; box-shadow: 0 3px 8px rgba(44, 62, 80, 0.08);
+  padding: 4px 12px; box-shadow: 0 2px 6px rgba(44, 62, 80, 0.08);
   cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
   transition: transform 0.15s ease;
 }
 .level-title-btn:active { transform: scale(0.95); }
-.level-title-text { font-size: 15px; font-weight: 900; color: #2C3E50; letter-spacing: 0.5px; }
-.level-arrow { font-size: 12px; color: #7F8C8D; }
+.level-title-text { font-size: 14px; font-weight: 900; color: #2C3E50; letter-spacing: 0.5px; }
+.level-arrow { font-size: 11px; color: #7F8C8D; }
 
 .streak-badge {
   display: inline-flex; align-items: center; gap: 4px; background: #FFFFFF;
-  border: 1.5px solid #F9E79F; padding: 4px 10px; border-radius: 20px;
-  box-shadow: 0 3px 8px rgba(241, 196, 15, 0.15);
+  border: 1.5px solid #F9E79F; padding: 3px 8px; border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(241, 196, 15, 0.15);
 }
-.trophy-icon { font-size: 14px; }
-.streak-text { font-size: 13px; font-weight: 800; color: #B7950B; }
+.trophy-icon { font-size: 13px; }
+.streak-text { font-size: 12px; font-weight: 800; color: #B7950B; }
 
 .hud-status-row {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-top: 2px;
+  gap: 10px;
+  margin-top: 0px;
 }
 
 .status-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: #FFFFFF;
   border: 1.5px solid #D6E4EC;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
+  padding: 3px 12px;
+  border-radius: 18px;
+  font-size: 12px;
   font-weight: 700;
   color: #2C3E50;
-  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.06);
+  box-shadow: 0 2px 6px rgba(44, 62, 80, 0.05);
 }
 
 .pill-label {
   color: #7F8C8D;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .highlight-red {
   color: #E74C3C;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
 }
 
 /* ================= 规则胶囊 ================= */
+.rules-banner {
+  margin: 3px 0;
+  flex-shrink: 0;
+}
+
 .rules-card-container {
   display: flex;
   background: #FFFFFF;
   border: 1.5px solid #D6E4EC;
-  border-radius: 16px;
-  padding: 8px 6px;
-  box-shadow: 0 4px 12px rgba(44, 62, 80, 0.06);
+  border-radius: 12px;
+  padding: 4px 6px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.05);
 }
 
 .rule-card {
   flex: 1;
   text-align: center;
-  padding: 2px 4px;
+  padding: 1px 3px;
   position: relative;
 }
 
@@ -160,13 +176,13 @@ body {
 }
 
 .rule-title {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #2C3E50;
 }
 
 .rule-sub {
-  font-size: 10px;
+  font-size: 9px;
   color: #7F8C8D;
   margin-top: 1px;
 }
@@ -175,15 +191,18 @@ body {
 .board-wrapper {
   position: relative;
   display: flex;
+  flex: 1;
+  min-height: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 12px 0;
+  margin: 3px 0;
 }
 
 .board-container {
-  width: min(90vw, 48vh, 360px);
-  height: min(90vw, 48vh, 360px);
+  width: min(88vw, 42vh, 340px);
+  height: min(88vw, 42vh, 340px);
+  max-height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -434,19 +453,20 @@ body {
 
 /* ================= 底部 3D 游戏道具工具栏 ================= */
 .bottom-toolbar {
-  margin-top: 8px;
+  margin-top: 4px;
   margin-bottom: 2px;
+  flex-shrink: 0;
 }
 
 .toolbar-wrapper {
   background: #FFFFFF;
-  border: 2px solid #D6E4EC;
-  border-radius: 24px;
-  padding: 8px 12px 6px 12px;
+  border: 1.5px solid #D6E4EC;
+  border-radius: 20px;
+  padding: 5px 10px 3px 10px;
   display: flex;
   justify-content: space-around;
   align-items: flex-end;
-  box-shadow: 0 8px 24px rgba(52, 73, 94, 0.08);
+  box-shadow: 0 4px 14px rgba(52, 73, 94, 0.08);
 }
 
 .tool-btn {
@@ -456,7 +476,7 @@ body {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0 2px;
   position: relative;
   transition: transform 0.15s ease;
 }
@@ -465,9 +485,9 @@ body {
 }
 
 .tool-icon-wrapper {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   background: #F4F8FA;
   border: 1.5px solid #DCE9F0;
   display: flex;
@@ -478,24 +498,24 @@ body {
 }
 
 .tool-svg {
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
 }
 
 .action-coords.active .tool-icon-wrapper {
   background: #E8F8F5;
   border-color: #2ECC71;
   color: #27AE60;
-  box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
 }
 
 .prop-card-3d {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   background: #FFFFFF;
-  border-radius: 16px;
+  border-radius: 13px;
   border: 2px solid #E2EDF3;
-  box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
+  box-shadow: 0 3px 8px rgba(44, 62, 80, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -503,33 +523,33 @@ body {
 }
 
 .prop-bull-icon {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
 }
 
 .prop-lightbulb-svg {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
 
 .prop-badge-pill {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -5px;
+  right: -5px;
   background: #2980B9;
   color: #FFFFFF;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
-  border: 2px solid #FFFFFF;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  padding: 0 3px;
+  border: 1.5px solid #FFFFFF;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 .prop-badge-pill.badge-green {
@@ -537,10 +557,10 @@ body {
 }
 
 .tool-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #7F8C8D;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 .action-coords.active .tool-label {
   color: #27AE60;
