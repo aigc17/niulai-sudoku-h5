@@ -151,17 +151,19 @@ export function getLevelById(levelId: number): LevelData {
     // 严格科学的难度爬升阶梯
     let size = 4;
     if (levelId <= 3) {
-      size = 4; // 1~3 关: 4x4 新手入门
-    } else if (levelId <= 12) {
-      size = 5; // 4~12 关: 5x5 初级进阶
+      size = 4; // 1~3 关: 4x4 新手入门 (保底独立单格)
+    } else if (levelId <= 10) {
+      size = 5; // 4~10 关: 5x5 初级进阶 (保底独立单格)
     } else if (levelId <= 23) {
-      size = 6; // 13~23 关: 6x6 中级推理
+      size = 6; // 11~23 关: 6x6 中级推理 (破局点生成)
     } else if (levelId <= 50) {
       size = 7; // 24~50 关: 7x7 高级挑战 (含第 24 关真机名局)
     } else if (levelId <= 100) {
-      size = 8; // 51~100 关: 8x8 专家大师
+      size = 8; // 51~100 关: 8x8 专家大师 (破局点生成)
+    } else if (levelId <= 250) {
+      size = 9; // 101~250 关: 9x9 巅峰大师 (破局点生成)
     } else {
-      size = 9; // 101+ 关: 9x9 巅峰地狱
+      size = 10; // 251+ 关: 10x10 地狱巅峰 (破局点生成)
     }
 
     level = LevelGenerator.generateUniqueLevel(levelId, size);

@@ -18,21 +18,24 @@ import { QueensSolver } from './solver';
 export class LevelGenerator {
   /**
    * 基于关卡 ID 确定性伪随机数生成器 (Mulberry32 PRNG)
-   * 确保第 N 关在任何时间、任何设备上生成的地图 100% 相同且具有唯一解
+   * 确保第 N 关在任何时间、任何设备上生成的地图 100% 相同且具有严格唯一正解与逻辑破局点
    */
-  public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts: number = 200): LevelData {
+  public static generateUniqueLevel(levelId: number, size: number = 7, maxAttempts: number = 350): LevelData {
+    const isEarlyTutorial = levelId <= 10; // 1~10 关强制生成 100% 独立单格单色突破口
+    const requireAnchor = true;           // 全量关卡标配“破局点生成器”，绝不刁难玩家
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const seed = (levelId * 10007 + attempt * 269) >>> 0;
       const rng = this.createRNG(seed);
 
-      // 1. 生成满足 8 邻域互斥约束的合法目标小马分布
+      // 1. 生成满足 8 邻域互斥约束的合法目标牛头分布
       const targetQueens = this.generateValidQueens(size, rng);
       if (!targetQueens) continue;
 
-      // 2. 以小马为种子进行多源洪泛划分连通区域
-      const regions = this.partitionBoard(size, targetQueens, rng);
+      // 2. 以牛头为种子进行多源洪泛划分连通区域（注入破局点）
+      const regions = this.partitionBoard(size, targetQueens, rng, isEarlyTutorial, requireAnchor);
 
-      // 3. 验证唯一解性 (CSP 求解器)
+      // 3. 验证唯一解性 (CSP 约束求解器)
       const solutions = QueensSolver.solve(regions, 2);
       if (solutions.length === 1) {
         return {
@@ -42,7 +45,7 @@ export class LevelGenerator {
           solution: solutions[0],
           name: `第 ${levelId} 关`,
           targetCount: size,
-          initialTime: Math.min(120 + size * 20, 360)
+          initialTime: Math.min(150 + size * 20, 360)
         };
       }
     }
@@ -67,7 +70,6 @@ export class LevelGenerator {
     function backtrack(row: number): boolean {
       if (row === size) return true;
 
-      // 用确定性 RNG 打乱列顺序
       const shuffledCols = [...cols].sort(() => rng() - 0.5);
 
       for (const col of shuffledCols) {
@@ -90,13 +92,28 @@ export class LevelGenerator {
     return backtrack(0) ? queens : null;
   }
 
-  private static partitionBoard(size: number, seeds: GridCoord[], rng: () => number): number[][] {
+  /**
+   * 连通区域划分算法：注入“破局点”机制，保证 1~10 关拥有独立单格，高难关卡拥有狭管突破口
+   */
+  private static partitionBoard(
+    size: number,
+    seeds: GridCoord[],
+    rng: () => number,
+    isEarlyTutorial: boolean,
+    requireAnchor: boolean
+  ): number[][] {
     const regions: number[][] = Array.from({ length: size }, () => new Array<number>(size).fill(-1));
     const queue: { row: number; col: number; region: number }[] = [];
 
+    // 若为 1~10 关，固定第 0 个种子绝不扩散（严格保持 size = 1 单格独占）
+    // 若为高级关卡，随机选 1 个种子作为狭管突破口
+    const isolatedSeedIdx = isEarlyTutorial ? 0 : (requireAnchor ? Math.floor(rng() * seeds.length) : -1);
+
     seeds.forEach((seed, regionId) => {
       regions[seed.row][seed.col] = regionId;
-      queue.push({ row: seed.row, col: seed.col, region: regionId });
+      if (regionId !== isolatedSeedIdx) {
+        queue.push({ row: seed.row, col: seed.col, region: regionId });
+      }
     });
 
     const dirs = [
