@@ -98,7 +98,8 @@ export class SoundManager {
   }
 
   /**
-   * 2. 划叉排除音 (Cross - ❌)
+   * 2. 划叉/滑动排查音效 (Crisp Clock Tick / Woodblock "哒哒哒" 机械秒针声)
+   * 极度清脆明快、富有治愈感的极短高频滴答声，滑动连划时产生极其舒适的连续打击感
    */
   public playCross() {
     if (!this.soundEnabled) return;
@@ -109,19 +110,21 @@ export class SoundManager {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(450, t);
-    osc.frequency.exponentialRampToValueAtTime(220, t + 0.05);
+    // 采用高频正弦波 (1500Hz 极速微滑降到 1100Hz)
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1500, t);
+    osc.frequency.exponentialRampToValueAtTime(1100, t + 0.022);
 
-    gain.gain.setValueAtTime(0.25, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    // 瞬态 25ms 快速衰减，清脆干脆，绝无沉闷感
+    gain.gain.setValueAtTime(0.28, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
 
     osc.start(t);
-    osc.stop(t + 0.05);
-    this.triggerHaptic(12);
+    osc.stop(t + 0.025);
+    this.triggerHaptic(6);
   }
 
   /**
