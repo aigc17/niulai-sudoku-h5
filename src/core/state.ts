@@ -18,6 +18,7 @@ import { CellState, LevelData, UserProfile, GameStatus, ConflictInfo } from '../
 import { QueensSolver } from './solver';
 import { getLevelById } from './levels';
 import { soundManager } from '../audio/soundManager';
+import { HintEngine, DeductiveHintResult } from './hintEngine';
 
 export class GameStateManager {
   private static instance: GameStateManager;
@@ -43,13 +44,13 @@ export class GameStateManager {
   public currentLevel!: LevelData;
   public grid: CellState[][] = [];
   public conflicts: ConflictInfo[] = [];
+  public remainingPonies: number = 0;
+  public timeRemaining: number = 240;
   public status: GameStatus = 'PLAYING';
-  public timeRemaining: number = 209;
-  public remainingPonies: number = 7;
-  public usedHintsThisLevel: number = 0;
-
-  public lastPopCell: { row: number; col: number } | null = null;
   public lastErrorCell: { row: number; col: number } | null = null;
+  public lastPopCell: { row: number; col: number } | null = null;
+  public usedHintsThisLevel: number = 0;
+  public activeDeductiveHint: DeductiveHintResult | null = null;
 
   private history: CellState[][][] = [];
   private timerInterval: number | null = null;
@@ -358,10 +359,16 @@ export class GameStateManager {
   }
 
   /**
-   * 道具：使用灯泡提示 (直接放置 1 匹正解牛牛，每关上限为当前关牛牛总只数)
+   * 道具：使用灯泡启发式逻辑提示（生成当前盘面推导说明并高亮，支持“快速应用”）
    */
   public useHintProp(): boolean {
     if (this.status !== 'PLAYING') return false;
+
+    // 如果当前已有激活的提示，点击提示直接执行应用
+    if (this.activeDeductiveHint) {
+      this.applyActiveHint();
+      return true;
+    }
 
     const maxHints = this.currentLevel.targetCount || this.currentLevel.size;
     if (this.usedHintsThisLevel >= maxHints) {
@@ -379,33 +386,51 @@ export class GameStateManager {
       return false;
     }
 
-    const target = QueensSolver.getSmartHint(this.grid, this.currentLevel.regions);
-    if (!target) {
+    const hint = HintEngine.analyze(this.grid, this.currentLevel.regions, this.currentLevel.solution || []);
+    if (!hint) {
       if (this.onErrorMessage) {
         this.onErrorMessage('当前盘面已有冲突或已无法推导，请先调整已有牛牛或清除部分标记');
       }
       return false;
     }
 
-    this.pushHistory();
-    this.user.props.hint--;
-    this.usedHintsThisLevel++;
+    this.activeDeductiveHint = hint;
     soundManager.playHint();
-
-    this.grid[target.row][target.col] = CellState.ANIMAL;
-    this.lastPopCell = { row: target.row, col: target.col };
-    this.evaluateBoard();
-    this.saveStorage();
     this.notify();
-
-    if (this.onErrorMessage) {
-      this.onErrorMessage(`💡 提示牛头已就位！(本关已用 ${this.usedHintsThisLevel}/${maxHints} 次)`);
-    }
     return true;
   }
 
   /**
-   * 增加提示机会并在可能时立即落子
+   * 快速应用当前激活的逻辑提示
+   */
+  public applyActiveHint() {
+    if (!this.activeDeductiveHint || this.status !== 'PLAYING') return;
+
+    this.pushHistory();
+    this.user.props.hint = Math.max(0, this.user.props.hint - 1);
+    this.usedHintsThisLevel++;
+
+    this.activeDeductiveHint.apply(this.grid, this.currentLevel.regions);
+    this.activeDeductiveHint = null;
+
+    soundManager.playAnimal();
+    this.evaluateBoard();
+    this.saveStorage();
+    this.notify();
+  }
+
+  /**
+   * 关闭/取消当前激活的提示
+   */
+  public dismissActiveHint() {
+    if (this.activeDeductiveHint) {
+      this.activeDeductiveHint = null;
+      this.notify();
+    }
+  }
+
+  /**
+   * 增加提示机会并在可能时立即给出提示
    */
   public addHintAndUse() {
     this.user.props.hint++;

@@ -125,6 +125,13 @@ export class BoardRenderer {
       c.coords.forEach(p => conflictSet.add(`${p.row},${p.col}`));
     });
 
+    const hintHighlights = new Map<string, 'focus' | 'target' | 'warning'>();
+    if (gameState.activeDeductiveHint) {
+      gameState.activeDeductiveHint.highlightCells.forEach(hc => {
+        hintHighlights.set(`${hc.row},${hc.col}`, hc.type);
+      });
+    }
+
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         const cell = this.cellElements[r]?.[c];
@@ -133,6 +140,12 @@ export class BoardRenderer {
         const state = gameState.grid[r][c];
         const isConflict = conflictSet.has(`${r},${c}`);
         const isError = gameState.lastErrorCell && gameState.lastErrorCell.row === r && gameState.lastErrorCell.col === c;
+
+        // 更新提示高亮样式
+        const hintType = hintHighlights.get(`${r},${c}`);
+        cell.classList.toggle('cell-hint-focus', hintType === 'focus');
+        cell.classList.toggle('cell-hint-target', hintType === 'target');
+        cell.classList.toggle('cell-hint-warning', hintType === 'warning');
 
         // 更新冲突样式
         if (isConflict) {

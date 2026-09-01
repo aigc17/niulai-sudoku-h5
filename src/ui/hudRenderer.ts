@@ -40,6 +40,7 @@ export class HudRenderer {
     this.renderHeader();
     this.renderRulesBanner();
     this.renderBottomToolbar();
+    this.renderDeductiveHintUI();
   }
 
   private formatTime(time: number): string {
@@ -219,6 +220,47 @@ export class HudRenderer {
     bindBtn('#btn-clear', () => gameState.clearBoard());
     bindBtn('#btn-hint', () => gameState.useHintProp());
     bindBtn('#btn-coords', () => gameState.toggleCoordinates());
+  }
+
+  /**
+   * 渲染动态启发式逻辑推导浮层（顶部白底气泡说明 + 底部【快速应用】黄色高亮药丸）
+   */
+  public renderDeductiveHintUI() {
+    let hintContainer = document.getElementById('deductive-hint-layer');
+    if (!hintContainer) {
+      hintContainer = document.createElement('div');
+      hintContainer.id = 'deductive-hint-layer';
+      hintContainer.className = 'deductive-hint-layer';
+      document.body.appendChild(hintContainer);
+    }
+
+    if (!gameState.activeDeductiveHint) {
+      hintContainer.innerHTML = '';
+      hintContainer.style.display = 'none';
+      return;
+    }
+
+    hintContainer.style.display = 'block';
+    hintContainer.innerHTML = `
+      <!-- 顶部浮动逻辑推导气泡说明 -->
+      <div class="hint-floating-banner pop-in-banner">
+        <div class="hint-bulb-glow">💡</div>
+        <div class="hint-msg-text">${gameState.activeDeductiveHint.message}</div>
+      </div>
+
+      <!-- 底部【快速应用】亮黄色药丸按钮 -->
+      <div class="quick-apply-floating-bar pop-in-btn">
+        <button id="btn-quick-apply" class="quick-apply-btn">快速应用</button>
+      </div>
+    `;
+
+    const btnQuickApply = hintContainer.querySelector('#btn-quick-apply') as HTMLElement | null;
+    if (btnQuickApply) {
+      btnQuickApply.addEventListener('click', (e) => {
+        e.stopPropagation();
+        gameState.applyActiveHint();
+      });
+    }
   }
 
   /**

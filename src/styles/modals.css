@@ -1,0 +1,176 @@
+/**
+ * [INPUT]: None - CSS3 规范
+ * [OUTPUT]: 弹窗模态层样式与跨设备同步/攻略卡片样式 (.modal-overlay, .modal-card, .guide-card 等)
+ * [POS]: 弹窗视觉子系统，配合 modalRenderer.ts 呈现流畅动效与毛玻璃质感
+ *
+ * [自指声明]
+ * 1. 一旦我被更新，必须更新本文件 Header
+ * 2. 影响外部接口则更新所属 folder.md/CLAUDE.md
+ * 3. 架构级变动则更新根目录 CLAUDE.md
+ * 4. 若依赖的文件 POS 变化，需检查本文件 INPUT 是否仍然准确
+ *
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+/* ================= 弹窗系统 ================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.confetti-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.modal-card {
+  background: var(--card-bg);
+  width: min(85vw, 320px);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  position: relative;
+  z-index: 1001;
+}
+
+.animate-pop {
+  animation: pop-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.win-crown, .lose-icon {
+  font-size: 48px;
+  margin-bottom: 4px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.win-title {
+  color: var(--primary-color);
+}
+
+.lose-title {
+  color: var(--text-red);
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--text-gray);
+  margin-top: 8px;
+}
+
+.rewards-box {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+  background: var(--bg-color);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.reward-label {
+  color: var(--text-gray);
+  font-size: 13px;
+}
+
+.modal-primary-btn {
+  background: var(--primary-color);
+  color: #FFF;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.15s ease;
+}
+.modal-primary-btn:active { transform: scale(0.96); }
+
+.lose-actions-column { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+
+.modal-secondary-btn {
+  background: #FFF3CD;
+  color: #856404;
+  border: 1.5px solid #FFEBAA;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 11px;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.15s ease;
+}
+.modal-secondary-btn:active { transform: scale(0.96); }
+
+.modal-text-btn { background: none; border: none; color: #7F8C8D; font-size: 13px; font-weight: 600; padding: 6px; cursor: pointer; }
+
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-close-x { background: none; border: none; font-size: 15px; cursor: pointer; color: var(--primary-color); }
+
+.settings-list { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-dark); }
+
+.quick-level-select { margin-top: 16px; text-align: left; border-top: 1px solid #E5E5EA; padding-top: 12px; }
+.select-label { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 8px; }
+.level-btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+.lvl-jump-btn { background: var(--bg-color); border: none; border-radius: 8px; padding: 8px 0; font-size: 13px; color: var(--text-dark); cursor: pointer; }
+.lvl-jump-btn.current { background: var(--primary-color); color: #FFF; }
+.lvl-jump-btn.locked { opacity: 0.45; cursor: not-allowed; background: #E2EDF3; color: #7F8C8D; }
+
+.custom-jump-row { display: flex; gap: 8px; margin-top: 10px; }
+.custom-jump-input { flex: 1; border: 1px solid #D5DBDB; background: var(--bg-color); border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; }
+.custom-jump-btn { background: var(--primary-color); color: #FFF; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+/* ================= 跨设备存档同步与攻略 ================= */
+.save-sync-section { margin-top: 16px; text-align: left; border-top: 1px solid #E5E5EA; padding-top: 12px; }
+.save-code-badge { background: #F4F8FA; border: 1.5px dashed #A6ACAF; border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.15s; }
+.save-code-badge:active { background: #EBF5FB; }
+.save-code-str { font-family: monospace; font-size: 11px; color: #2C3E50; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+.save-copy-tag { font-size: 11px; font-weight: 800; color: var(--primary-color); }
+.welcome-import-box { margin-top: 10px; }
+
+.guide-card { max-width: 360px; max-height: 85vh; display: flex; flex-direction: column; }
+.guide-scroll-body { overflow-y: auto; text-align: left; padding-right: 4px; display: flex; flex-direction: column; gap: 10px; }
+.guide-sec-title { font-size: 13px; font-weight: 800; color: #2C3E50; margin-bottom: 4px; }
+.guide-list { list-style: none; padding-left: 0; font-size: 12px; line-height: 1.5; color: #34495E; }
+.guide-tip-card { background: #F4F8FA; border: 1px solid #DCE9F0; border-radius: 10px; padding: 6px 10px; margin-bottom: 6px; }
+.tip-title { font-size: 12px; font-weight: 800; color: #2980B9; margin-bottom: 2px; }
+.tip-desc { font-size: 11px; color: #555; line-height: 1.4; }
