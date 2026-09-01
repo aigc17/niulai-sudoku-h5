@@ -199,13 +199,13 @@ export class ModalRenderer {
           <div class="level-btn-grid">
             ${[
               { lvl: 1, tag: '4阶' },
-              { lvl: 2, tag: '4阶' },
               { lvl: 4, tag: '5阶' },
-              { lvl: 7, tag: '5阶' },
               { lvl: 11, tag: '6阶' },
               { lvl: 24, tag: '7阶' },
-              { lvl: 61, tag: '8阶' },
-              { lvl: 100, tag: '8阶' }
+              { lvl: 26, tag: '8阶' },
+              { lvl: 30, tag: '7阶' },
+              { lvl: 33, tag: '7阶' },
+              { lvl: 61, tag: '8阶' }
             ].map(({ lvl, tag }) => {
               const isUnlocked = lvl <= (user.maxUnlockedLevel || 1);
               const isCurrent = lvl === user.level;
