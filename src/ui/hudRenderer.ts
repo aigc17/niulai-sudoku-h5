@@ -242,17 +242,31 @@ export class HudRenderer {
 
     hintContainer.style.display = 'block';
     hintContainer.innerHTML = `
-      <!-- 顶部浮动逻辑推导气泡说明 -->
-      <div class="hint-floating-banner pop-in-banner">
-        <div class="hint-bulb-glow">💡</div>
-        <div class="hint-msg-text">${gameState.activeDeductiveHint.message}</div>
-      </div>
+      <div class="deductive-hint-backdrop">
+        <!-- 顶部浮动逻辑推导气泡说明 -->
+        <div class="hint-floating-banner pop-in-banner">
+          <div class="hint-bulb-glow">
+            <span class="bulb-emoji-glow">💡</span>
+          </div>
+          <div class="hint-msg-text">${gameState.activeDeductiveHint.message}</div>
+        </div>
 
-      <!-- 底部【快速应用】亮黄色药丸按钮 -->
-      <div class="quick-apply-floating-bar pop-in-btn">
-        <button id="btn-quick-apply" class="quick-apply-btn">快速应用</button>
+        <!-- 底部【快速应用】亮黄色大药丸按钮 -->
+        <div class="quick-apply-floating-bar pop-in-btn">
+          <button id="btn-quick-apply" class="quick-apply-btn">快速应用</button>
+        </div>
       </div>
     `;
+
+    const backdropEl = hintContainer.querySelector('.deductive-hint-backdrop') as HTMLElement | null;
+    if (backdropEl) {
+      backdropEl.addEventListener('click', (e) => {
+        // 点击非按钮区域可以手动关闭提示
+        if ((e.target as HTMLElement).id !== 'btn-quick-apply') {
+          gameState.dismissActiveHint();
+        }
+      });
+    }
 
     const btnQuickApply = hintContainer.querySelector('#btn-quick-apply') as HTMLElement | null;
     if (btnQuickApply) {

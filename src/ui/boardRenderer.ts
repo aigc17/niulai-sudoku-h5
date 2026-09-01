@@ -127,9 +127,12 @@ export class BoardRenderer {
 
     const hintHighlights = new Map<string, 'focus' | 'target' | 'warning'>();
     if (gameState.activeDeductiveHint) {
+      this.container.classList.add('board-in-spotlight');
       gameState.activeDeductiveHint.highlightCells.forEach(hc => {
         hintHighlights.set(`${hc.row},${hc.col}`, hc.type);
       });
+    } else {
+      this.container.classList.remove('board-in-spotlight');
     }
 
     for (let r = 0; r < size; r++) {
