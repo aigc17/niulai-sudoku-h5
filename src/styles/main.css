@@ -381,11 +381,6 @@ button, input, select, textarea,
   box-shadow: inset 0 0 0 2px var(--text-red) !important;
 }
 
-.cell-error-bg {
-  background-color: #FDEDEC !important;
-  box-shadow: inset 0 0 0 2px #F5B7B1 !important;
-}
-
 .cell-symbol {
   position: absolute;
   top: 4px;

@@ -177,13 +177,7 @@ export class BoardRenderer {
                 </svg>
               </div>
             `;
-            if (isRedCross) {
-              cell.classList.add('cell-error-bg');
-            } else {
-              cell.classList.remove('cell-error-bg');
-            }
           } else if (state === CellState.ANIMAL) {
-            cell.classList.remove('cell-error-bg');
             const isJustPopped = gameState.lastPopCell && gameState.lastPopCell.row === r && gameState.lastPopCell.col === c;
             slot.innerHTML = `
               <div class="cell-animal ${isJustPopped ? 'bull-jump-pop' : ''}">
@@ -191,7 +185,6 @@ export class BoardRenderer {
               </div>
             `;
           } else {
-            cell.classList.remove('cell-error-bg');
             slot.innerHTML = '';
           }
         }
