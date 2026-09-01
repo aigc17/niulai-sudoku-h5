@@ -86,7 +86,7 @@ export class SoundManager {
     osc.frequency.setValueAtTime(600, t);
     osc.frequency.exponentialRampToValueAtTime(300, t + 0.04);
 
-    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.setValueAtTime(0.5, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
 
     osc.connect(gain);
@@ -98,7 +98,7 @@ export class SoundManager {
   }
 
   /**
-   * 2. 划叉/点击排查音效 (100% 还原 iOS 原生键盘/屏幕轻敲 "哒-哒-哒" 瞬态机械声)
+   * 2. 划叉/点击排查音效 (100% 还原 iOS 原生键盘/屏幕轻敲 "哒-哒-哒" 瞬态机械声，音量饱满清脆)
    */
   public playCross() {
     if (!this.soundEnabled) return;
@@ -133,11 +133,11 @@ export class SoundManager {
     osc.frequency.setValueAtTime(1800, t);
     osc.frequency.exponentialRampToValueAtTime(800, t + 0.009);
 
-    oscGain.gain.setValueAtTime(0.2, t);
+    oscGain.gain.setValueAtTime(0.45, t);
     oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.009);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.65, t);
+    gain.gain.setValueAtTime(0.95, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.009);
 
     noise.connect(filter);
@@ -153,7 +153,7 @@ export class SoundManager {
   }
 
   /**
-   * 3. 放置正确小牛命中音 (Bouncy Joyful Victory Chime - 🐮)
+   * 3. 放置正确小牛命中音 (Bouncy Joyful Victory Chime - 🐮，大音量饱满欢快)
    */
   public playAnimal() {
     if (!this.soundEnabled) return;
@@ -173,7 +173,7 @@ export class SoundManager {
       osc.frequency.setValueAtTime(freq, startTime);
       osc.frequency.exponentialRampToValueAtTime(freq * 1.02, startTime + 0.25);
 
-      gain.gain.setValueAtTime(0.25, startTime);
+      gain.gain.setValueAtTime(0.55, startTime);
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
 
       osc.connect(gain);
@@ -196,7 +196,6 @@ export class SoundManager {
 
     const t = this.ctx.currentTime;
     
-    // 双脉冲降调蜂鸣：模拟经典街机/消除类游戏"嗒-嗒"短促拒止音
     const pulses = [
       { offset: 0, f1: 220, f2: 155, dur: 0.08 },
       { offset: 0.09, f1: 180, f2: 125, dur: 0.12 }
@@ -206,7 +205,6 @@ export class SoundManager {
       if (!this.ctx) return;
       const startTime = t + p.offset;
 
-      // 主振荡器：锯齿波产生清脆毛刺打击感
       const osc1 = this.ctx.createOscillator();
       const osc2 = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -219,7 +217,7 @@ export class SoundManager {
       osc2.frequency.setValueAtTime(p.f2, startTime);
       osc2.frequency.exponentialRampToValueAtTime(p.f2 * 0.7, startTime + p.dur);
 
-      gain.gain.setValueAtTime(0.35, startTime);
+      gain.gain.setValueAtTime(0.65, startTime);
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + p.dur);
 
       osc1.connect(gain);
@@ -254,7 +252,7 @@ export class SoundManager {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, t + idx * 0.06);
 
-      gain.gain.setValueAtTime(0.2, t + idx * 0.06);
+      gain.gain.setValueAtTime(0.55, t + idx * 0.06);
       gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.06 + 0.15);
 
       osc.connect(gain);
@@ -292,7 +290,7 @@ export class SoundManager {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(note.f, t + acc);
 
-      gain.gain.setValueAtTime(0.3, t + acc);
+      gain.gain.setValueAtTime(0.7, t + acc);
       gain.gain.exponentialRampToValueAtTime(0.001, t + acc + note.d);
 
       osc.connect(gain);
@@ -323,7 +321,7 @@ export class SoundManager {
     osc.frequency.setValueAtTime(700, t);
     osc.frequency.exponentialRampToValueAtTime(500, t + 0.03);
 
-    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.setValueAtTime(0.4, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
 
     osc.connect(gain);
